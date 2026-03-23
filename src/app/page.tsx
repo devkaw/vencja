@@ -76,11 +76,11 @@ export default function LandingPage() {
     },
   ];
 
-  const stats = [
-    { value: '30%', label: 'Reducao de inadimplencia' },
-    { value: 'R$ 10M+', label: 'Recuperados por clientes' },
-    { value: '2.500+', label: 'Usuarios ativos' },
-  ];
+  // const stats = [
+  //   { value: '30%', label: 'Reducao de inadimplencia' },
+  //   { value: 'R$ 10M+', label: 'Recuperados por clientes' },
+  //   { value: '2.500+', label: 'Usuarios ativos' },
+  // ];
 
   const testimonials = [
     {
@@ -181,15 +181,27 @@ export default function LandingPage() {
 
             {/* CTA Buttons */}
             <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8 opacity-0 ${mounted ? 'animate-fade-up animate-delay-300' : ''}`}>
-              <Link href="/register">
-                <button className="btn-primary group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-accent text-black font-semibold rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
-                  Começar Gratuitamente
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </Link>
-              <Link href="/login" className="sm:hidden text-sm font-medium text-gray-400 hover:text-white transition-colors">
-                Já tem conta? Entrar
-              </Link>
+              {user ? (
+                <Link href="/dashboard">
+                  <button className="btn-primary group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-accent text-black font-semibold rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
+                    <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Acessar Dashboard
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/register">
+                    <button className="btn-primary group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-accent text-black font-semibold rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
+                      Começar Gratuitamente
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </Link>
+                  <Link href="/login" className="sm:hidden text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                    Já tem conta? Entrar
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Trust badges */}
@@ -210,14 +222,14 @@ export default function LandingPage() {
           </div>
 
           {/* Stats */}
-          <div className={`mt-10 sm:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-3xl mx-auto opacity-0 ${mounted ? 'animate-fade-up animate-delay-500' : ''}`}>
+          {/* <div className={`mt-10 sm:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-3xl mx-auto opacity-0 ${mounted ? 'animate-fade-up animate-delay-500' : ''}`}>
             {stats.map((stat, i) => (
               <div key={i} className="text-center glass-card rounded-xl sm:rounded-2xl p-4 sm:p-6">
                 <div className="text-2xl sm:text-3xl sm:text-4xl font-bold text-accent mb-1">{stat.value}</div>
                 <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{stat.label}</div>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* Scroll indicator */}

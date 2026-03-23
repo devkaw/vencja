@@ -26,13 +26,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning className="dark">
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              document.documentElement.classList.add('dark');
-            `,
-          }}
-        />
+        <template dangerouslySetInnerHTML={{
+          __html: `
+            document.documentElement.classList.add('dark');
+          `,
+        }} />
       </head>
       <body className={cn(sora.variable, 'font-sans antialiased bg-black text-white overflow-x-hidden')}>
         {children}
