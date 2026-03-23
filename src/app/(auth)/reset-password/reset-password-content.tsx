@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Eye, EyeOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -147,9 +148,13 @@ export default function ResetPasswordContent() {
         <CardContent className="pt-6 pb-8 px-8">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">V</span>
-              </div>
+              <Image 
+                src="/logo.png" 
+                alt="VenceJa" 
+                width={40} 
+                height={40}
+                className="w-10 h-10 rounded-xl object-contain bg-black"
+              />
               <span className="text-xl font-bold">VenceJa</span>
             </Link>
             <h1 className="text-2xl font-bold">Nova Senha</h1>

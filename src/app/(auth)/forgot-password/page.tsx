@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,9 +71,13 @@ export default function ForgotPasswordPage() {
         </div>
         <div className="w-full max-w-md text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-8">
-            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">V</span>
-            </div>
+            <Image 
+              src="/logo.png" 
+              alt="VenceJa" 
+              width={48} 
+              height={48}
+              className="w-12 h-12 rounded-xl object-contain bg-black"
+            />
             <span className="text-2xl font-bold text-gray-900 dark:text-white">VenceJa</span>
           </Link>
           <div className="w-16 h-16 bg-success-100 dark:bg-success-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -105,9 +110,13 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-8">
-            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">V</span>
-            </div>
+            <Image 
+              src="/logo.png" 
+              alt="VenceJa" 
+              width={48} 
+              height={48}
+              className="w-12 h-12 rounded-xl object-contain bg-black"
+            />
             <span className="text-2xl font-bold text-gray-900 dark:text-white">VenceJa</span>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Esqueceu a senha?</h1>

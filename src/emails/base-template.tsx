@@ -1,9 +1,11 @@
-import { Html, Head, Body, Container, Section, Text, Hr } from '@react-email/components';
+import { Html, Head, Body, Container, Section, Text, Hr, Img } from '@react-email/components';
 
 interface BaseEmailProps {
   children: React.ReactNode;
   previewText?: string;
 }
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export function BaseEmail({ children }: BaseEmailProps) {
   return (
@@ -20,7 +22,13 @@ export function BaseEmail({ children }: BaseEmailProps) {
             <table style={styles.tableCenter}>
               <tr>
                 <td style={styles.logo}>
-                  <span style={styles.logoText}>V</span>
+                  <Img
+                    src={`${APP_URL}/logo.png`}
+                    alt="VenceJa"
+                    width="40"
+                    height="40"
+                    style={styles.logoImg}
+                  />
                 </td>
                 <td style={styles.brandNameCell}>
                   <span style={styles.brandName}>VenceJa</span>
@@ -83,13 +91,13 @@ const styles: Record<string, Record<string, string>> = {
     borderRadius: '12px',
     textAlign: 'center',
     verticalAlign: 'middle',
-    padding: '0',
+    padding: '4px',
   },
-  logoText: {
-    color: '#000000',
-    fontSize: '24px',
-    fontWeight: 'bold',
-    lineHeight: '48px',
+  logoImg: {
+    width: '40px',
+    height: '40px',
+    objectFit: 'contain',
+    borderRadius: '8px',
   },
   brandNameCell: {
     textAlign: 'left',

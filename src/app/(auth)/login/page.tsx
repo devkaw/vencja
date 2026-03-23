@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,9 +62,13 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-8 group">
-            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center transition-transform group-hover:scale-110">
-              <span className="text-black font-bold text-xl">V</span>
-            </div>
+            <Image 
+              src="/logo.png" 
+              alt="VenceJa" 
+              width={48} 
+              height={48}
+              className="w-12 h-12 rounded-xl object-contain bg-black"
+            />
             <span className="text-2xl font-bold">VenceJa</span>
           </Link>
           <h1 className="text-3xl font-bold">Bem-vindo de volta</h1>

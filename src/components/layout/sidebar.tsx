@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -85,9 +86,13 @@ export function Sidebar({ profile }: SidebarProps) {
         <div className="flex flex-col h-full pt-14 sm:pt-16 lg:pt-0">
           <div className="p-4 sm:p-6 flex items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-3 group" onClick={handleLinkClick}>
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-accent rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3">
-                <span className="text-black font-bold text-base sm:text-lg">V</span>
-              </div>
+              <Image 
+                src="/logo.png" 
+                alt="VenceJa" 
+                width={40} 
+                height={40}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain bg-black"
+              />
               <span className="text-lg sm:text-xl font-bold tracking-tight">
                 VenceJa
               </span>
