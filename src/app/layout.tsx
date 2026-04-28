@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Sora } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 import { ToastContainer } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ export default function RootLayout({
         }} />
       </head>
       <body className={cn(sora.variable, 'font-sans antialiased bg-black text-white overflow-x-hidden')}>
+        <Analytics />
         {children}
         <ToastContainer />
       </body>
