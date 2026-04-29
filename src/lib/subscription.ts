@@ -26,7 +26,7 @@ export const PLANS = {
       'Ranking de inadimplência',
       'Dashboard inteligente',
       'Score de clientes',
-      'Suporte via WhatsApp',
+      'Suporte por Email',
     ],
     limits: {
       maxClients: 3,

@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Star,
   MessageSquare,
+  Mail,
   LayoutDashboard,
   FolderKanban,
   Target,
@@ -405,7 +406,7 @@ export default function LandingPage() {
               </div>
 
               <ul className="space-y-2 sm:space-y-4 mb-6 sm:mb-8">
-                {['3 clientes', '10 cobranças', 'Ranking de clientes', 'Dashboard inteligente', 'Score de clientes', 'Suporte via WhatsApp'].map((item, i) => (
+                {['3 clientes', '10 cobranças', 'Ranking de clientes', 'Dashboard inteligente', 'Score de clientes', 'Suporte por Email'].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 sm:gap-3">
                     <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
                     <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">{item}</span>
@@ -509,12 +510,10 @@ export default function LandingPage() {
             
             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm text-gray-400">
               <a 
-                href="https://wa.me/5579991526467" 
-                target="_blank" 
-                rel="noopener noreferrer"
+                href="mailto:suporte@venceja.com.br" 
                 className="flex items-center gap-1.5 sm:gap-2 hover:text-accent transition-colors"
               >
-                <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+                <Mail className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Fale conosco</span>
               </a>
               <a href="#" className="hover:text-accent transition-colors">Termos</a>

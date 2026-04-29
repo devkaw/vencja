@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -130,12 +130,10 @@ export default function LoginPage() {
         </p>
 
         <a 
-          href="https://wa.me/5579991526467" 
-          target="_blank" 
-          rel="noopener noreferrer"
+          href="mailto:suporte@venceja.com.br" 
           className="flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-accent transition-colors"
         >
-          <MessageSquare className="w-4 h-4" />
+          <Mail className="w-4 h-4" />
           <span>Precisa de ajuda? Fale conosco</span>
         </a>
       </div>

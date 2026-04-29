@@ -20,7 +20,7 @@ const features = [
   { name: 'Ranking de inadimplência', free: true, pro: true },
   { name: 'Dashboard inteligente', free: true, pro: true },
   { name: 'Score de clientes', free: true, pro: true },
-  { name: 'Suporte via WhatsApp', free: true, pro: true },
+  { name: 'Suporte por Email', free: true, pro: true },
   { name: 'Cobrança via WhatsApp', free: false, pro: true },
   { name: 'Cobranças recorrentes', free: false, pro: true },
   { name: 'Exportação CSV', free: false, pro: true },
