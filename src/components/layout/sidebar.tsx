@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -14,12 +14,13 @@ import {
   Settings,
   LogOut,
   Crown,
-  Shield,
   Menu,
   X,
   Sparkles,
-  MessageSquare,
-  BarChart3
+  BarChart3,
+  ChevronLeft,
+  FileText,
+  CreditCard
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { hasPremiumAccess } from '@/lib/subscription';
@@ -27,6 +28,8 @@ import type { Profile } from '@/types';
 
 interface SidebarProps {
   profile: Profile | null;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }
 
 const navigation = [
@@ -35,11 +38,12 @@ const navigation = [
   { name: 'Clientes', href: '/dashboard/clients', icon: Users },
   { name: 'Cobranças', href: '/dashboard/charges', icon: Receipt },
   { name: 'Ranking', href: '/dashboard/ranking', icon: TrendingDown },
-  { name: 'Relatórios', href: '/dashboard/relatorios', icon: BarChart3 },
+  { name: 'Relatórios', href: '/dashboard/relatorios', icon: FileText },
+  { name: 'Planos', href: '/dashboard/upgrade', icon: CreditCard },
   { name: 'Configurações', href: '/dashboard/settings', icon: Settings },
 ];
 
-export function Sidebar({ profile }: SidebarProps) {
+export function Sidebar({ profile, collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const supabase = createClient();
   const hasAccess = hasPremiumAccess(profile);
@@ -58,45 +62,50 @@ export function Sidebar({ profile }: SidebarProps) {
     <>
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-3 left-3 z-[60] p-2 bg-white dark:bg-black rounded-xl border border-gray-200 dark:border-gray-800 hover:border-accent/30 transition-all"
+        className="lg:hidden fixed top-2 left-2 z-50 p-1.5 glass-card rounded-lg border border-white/10 hover:border-accent/30 transition-all"
       >
-        <Menu className="w-5 h-5" />
+        <Menu className="w-4 h-4" />
       </button>
 
       {mobileOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm animate-fade-in"
+          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <aside className={cn(
-        "fixed left-0 top-0 z-50 h-full w-[280px] sm:w-72 bg-white dark:bg-black border-r border-gray-100 dark:border-gray-800 transition-transform duration-300",
-        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        'fixed left-0 top-0 z-50 h-full glass-card border-r border-white/10 transition-all duration-300',
+        collapsed ? 'w-16' : 'w-16 lg:w-64',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}>
-        <div className="flex flex-col h-full pt-14 sm:pt-16 lg:pt-0">
-          <div className="p-4 sm:p-6 flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center gap-3 group" onClick={handleLinkClick}>
+        <div className="flex flex-col h-full">
+          <div className="p-3 border-b border-white/10 flex items-center justify-between">
+            <Link href="/dashboard" className="flex items-center gap-2 group" onClick={handleLinkClick}>
               <Image 
                 src="/logo.png" 
                 alt="VenceJa" 
-                width={40} 
-                height={40}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain bg-black"
+                width={32} 
+                height={32}
+                className="w-8 h-8 rounded-lg object-contain"
               />
-              <span className="text-lg sm:text-xl font-bold tracking-tight">
-                VenceJa
-              </span>
+              <span className={cn("text-lg font-light hidden", !collapsed && "lg:block")}>VenceJa</span>
             </Link>
             <button
-              onClick={() => setMobileOpen(false)}
-              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+              onClick={onToggle}
+              className="hidden lg:flex p-1.5 hover:bg-white/5 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5" />
+              <ChevronLeft className={cn("w-4 h-4 transition-transform", collapsed && "rotate-180")} />
+            </button>
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="lg:hidden p-1.5 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <nav className="flex-1 px-4 space-y-2">
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = item.href === '/dashboard' 
                 ? pathname === '/dashboard'
@@ -108,70 +117,47 @@ export function Sidebar({ profile }: SidebarProps) {
                   href={item.href}
                   onClick={handleLinkClick}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
+                    'flex items-center justify-center lg:justify-between gap-2 lg:gap-3 px-2 lg:px-3 py-2.5 rounded-xl text-sm font-light transition-all duration-200',
                     isActive
                       ? 'bg-accent/10 text-accent'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                      : 'text-slate-400 hover:bg-white/5 hover:text-white'
                   )}
                 >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
-    
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span className={cn("hidden", !collapsed && "lg:block")}>{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="p-4 border-t border-gray-100 dark:border-gray-800 space-y-3">
+          <div className="p-3 border-t border-white/10 space-y-2">
             {hasAccess ? (
-              <div className="flex items-center gap-3 px-4 py-3 bg-accent/5 rounded-xl border border-accent/20">
-                <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+              <div className={cn("flex items-center gap-2 lg:gap-3 px-2 lg:px-3 py-3 bg-accent/10 rounded-xl border border-accent/20", collapsed && "justify-center")}>
+                <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-4 h-4 text-accent" />
                 </div>
-                <div>
-                  <span className="text-sm font-semibold text-accent block">Vitalício Pro</span>
-                  <span className="text-xs text-gray-500">Acesso ilimitado</span>
+                <div className={cn("hidden", !collapsed && "lg:block")}>
+                  <span className="text-sm font-light text-accent block">Plano Pro</span>
+                  <span className="text-xs text-slate-500">Acesso ilimitado</span>
                 </div>
               </div>
             ) : (
               <Link
                 href="/dashboard/upgrade"
                 onClick={handleLinkClick}
-                className="flex items-center gap-3 px-4 py-3 bg-accent hover:bg-accent/90 text-black rounded-xl text-sm font-semibold transition-all hover-lift"
+                className={cn("flex items-center justify-center gap-2 px-2 lg:px-3 py-3 bg-accent text-black rounded-xl text-sm font-light transition-all hover-lift", collapsed && "px-2")}
               >
                 <Crown className="w-4 h-4" />
-                Upgrade Vitalício
+                <span className={cn("hidden", !collapsed && "lg:block")}>Upgrade Pro</span>
               </Link>
             )}
-
-            {profile?.is_admin && (
-              <Link
-                href="/dashboard/admin/payments"
-                onClick={handleLinkClick}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <Shield className="w-5 h-5" />
-                Admin
-              </Link>
-            )}
-
-            <a
-              href="https://wa.me/5579991526467"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={handleLinkClick}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              <MessageSquare className="w-5 h-5" />
-              Precisa de ajuda?
-            </a>
 
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className={cn("flex items-center justify-center gap-2 w-full px-2 lg:px-3 py-2 rounded-xl text-sm font-light text-slate-400 hover:bg-white/5 hover:text-white transition-colors", collapsed && "px-2")}
             >
               <LogOut className="w-5 h-5" />
-              Sair
+              <span className={cn("hidden", !collapsed && "lg:block")}>Sair</span>
             </button>
           </div>
         </div>

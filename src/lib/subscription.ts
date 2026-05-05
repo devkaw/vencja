@@ -2,7 +2,7 @@ import type { Profile } from '@/types';
 
 export function hasPremiumAccess(profile: Profile | null): boolean {
   if (!profile) return false;
-  return profile.plano === 'pro' || profile.acesso_vitalicio === true;
+  return profile.plano === 'pro';
 }
 
 export function canAccessFeature(profile: Profile | null, requiresPro: boolean): boolean {
@@ -23,10 +23,13 @@ export const PLANS = {
     features: [
       '3 clientes',
       '10 cobranças',
-      'Ranking de inadimplência',
       'Dashboard inteligente',
       'Score de clientes',
-      'Suporte por Email',
+      'Ranking de inadimplência',
+      'Calendário financeiro',
+      'Suporte por email',
+      'Cobranças recorrentes',
+      'Pagamento parcial',
     ],
     limits: {
       maxClients: 3,
@@ -35,19 +38,17 @@ export const PLANS = {
   },
   pro: {
     id: 'pro',
-    name: 'Vitalício Pro',
-    price: 297,
-    description: 'Acesso permanente a todas as funcionalidades',
+    name: 'Plano Pro',
+    price: 49.9,
+    priceAnnual: 499,
+    description: 'Acesso completo a todas as funcionalidades',
     features: [
-      'Tudo do plano Gratuito',
       'Clientes ilimitados',
       'Cobranças ilimitadas',
       'Cobrança via WhatsApp',
-      'Cobranças recorrentes',
-      'Pagamento parcial de cobranças',
+      'Relatórios completos',
       'Exportação CSV',
       'Suporte prioritário',
-      'Acesso vitalício - pague uma vez!',
     ],
     limits: {
       maxClients: -1,

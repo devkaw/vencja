@@ -112,7 +112,7 @@ export default function ResetPasswordContent() {
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h1 className="text-xl font-bold mb-2">Link Inválido</h1>
+            <h1 className="text-xl font-extralight mb-2">Link Inválido</h1>
             <p className="text-gray-500 mb-6">{message}</p>
             <Link href="/forgot-password">
               <Button>Solicitar novo email</Button>
@@ -131,7 +131,7 @@ export default function ResetPasswordContent() {
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h1 className="text-xl font-bold mb-2">Senha Alterada!</h1>
+            <h1 className="text-xl font-extralight mb-2">Senha Alterada!</h1>
             <p className="text-gray-500 mb-6">Sua senha foi redefinida com sucesso.</p>
             <Link href="/login">
               <Button className="bg-accent">Ir para Login</Button>
@@ -155,9 +155,9 @@ export default function ResetPasswordContent() {
                 height={40}
                 className="w-10 h-10 rounded-xl object-contain bg-black"
               />
-              <span className="text-xl font-bold">VenceJa</span>
+              <span className="text-xl font-extralight">VenceJa</span>
             </Link>
-            <h1 className="text-2xl font-bold">Nova Senha</h1>
+            <h1 className="text-2xl font-extralight">Nova Senha</h1>
             <p className="text-gray-500 mt-2">Digite sua nova senha abaixo</p>
           </div>
 

@@ -1,629 +1,366 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { DashboardSkeleton } from '@/components/ui/skeleton';
-import { formatCurrency, formatDate, calcularDiasAtraso, isVencido, filterChargesByMonth, calculateProjection, getAtrasoDesdeInicio, getAtrasoNoMes } from '@/lib/utils';
-import { TrendingUp, AlertTriangle, Clock, ArrowRight, DollarSign, Users, Receipt, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  BarElement,
-  BarController,
-  ArcElement,
-} from 'chart.js';
-import { format, isSameMonth, endOfMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatCurrency, formatDate, calcularDiasAtraso, isVencido } from '@/lib/utils';
+import { 
+  TrendingUp, AlertTriangle, Clock, DollarSign, Users, Receipt, CheckCircle, BarChart3, ChevronRight, Zap, Target, 
+  Activity, ArrowRight, Plus, Search, Filter, Download, Grid, List, MoreHorizontal, Trash2, Edit, Eye, X, Check, AlertOctagon,
+  TrendingDown, PieChart, Calendar, CreditCard, ArrowUpRight, ArrowDownRight
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { CardSkeleton, DashboardSkeleton } from '@/components/ui/skeleton';
+import type { Charge } from '@/types';
+import { Line, Pie, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, BarController, ArcElement, Title, Tooltip, Legend, Filler);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler);
 
-interface DashboardData {
-  totalClientes: number;
-  totalCobrancas: number;
-  cobrancasPagas: number;
-  cobrancasPendentes: number;
-  cobrancasVencidas: number;
-  faturamentoMes: number;
-  faturamentoTotal: number;
-  totalAtrasado: number;
-  menorScore: number;
-  chargesProximasVencer: any[];
-  chargesRecentes: any[];
-  topDevedores: any[];
-  dadosGrafico: { labels: string[]; valores: number[] };
-  dadosInadimplencia: { labels: string[]; valores: number[] };
-  dadosPerdaAtraso: { labels: string[]; valores: number[] };
-  projectionData: { labels: string[]; aVencer: number[]; mesmoPeriodoAnoAnterior: number[] };
-  metricasMes: {
-    cobrancasNoMes: number;
-    cobrancasPagasNoMes: number;
-    cobrancasAtrasadasNoMes: number;
-    faturamentoNoMes: number;
-  };
-  atrasoDesdeInicio: number;
-  atrasoNoMes: number;
-  taxaRecuperacao: number;
-}
+const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } };
+const stagger = { animate: { transition: { staggerChildren: 0.06 } } };
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     async function loadDashboard() {
-      setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const dataReferencia = new Date();
-      const { fim: fimMes } = { fim: endOfMonth(dataReferencia) };
-
       const [chargesRes, clientsRes] = await Promise.all([
-        supabase
-          .from('charges')
-          .select('*, client:clients(nome, score)')
-          .eq('user_id', user.id)
-          .order('data_vencimento', { ascending: false }),
-        supabase
-          .from('clients')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('total_atrasado', { ascending: false })
+        supabase.from('charges').select('*, client:clients(nome, score)').eq('user_id', user.id).order('data_vencimento', { ascending: false }),
+        supabase.from('clients').select('*').eq('user_id', user.id).order('total_atrasado', { ascending: false })
       ]);
 
       const allCharges = chargesRes.data || [];
       const clients = clientsRes.data || [];
-
-      const chargesPagas = allCharges.filter(c => c.status === 'pago');
-      const chargesPendentes = allCharges.filter(c => c.status === 'pendente' && !isVencido(c.data_vencimento));
-      const chargesVencidas = allCharges.filter(c => c.status === 'pendente' && isVencido(c.data_vencimento));
-
-      const metricasMes = filterChargesByMonth(allCharges, dataReferencia);
-      const atrasoDesdeInicio = getAtrasoDesdeInicio(allCharges);
-      const atrasoNoMes = getAtrasoNoMes(allCharges, dataReferencia);
-
-      const faturamentoTotal = chargesPagas.reduce((sum, c) => sum + Number(c.valor), 0);
-
-      const chargesProximasVencer = chargesPendentes
-        .filter(c => !isVencido(c.data_vencimento))
-        .sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime())
-        .slice(0, 5);
-
-      const chargesRecentes = allCharges.slice(0, 8);
-
-      const topDevedores = clients
-        .filter(c => Number(c.total_atrasado) > 0)
-        .slice(0, 5);
-
-      const labels: string[] = [];
-      const valores: number[] = [];
-      let acumulado = 0;
-      const totalDias = fimMes.getDate();
       const hoje = new Date();
-
-      for (let day = 1; day <= totalDias; day++) {
-        labels.push(day.toString());
-        
-        const isMesAtual = isSameMonth(dataReferencia, hoje);
-        
-        const paidOfDay = chargesPagas
-          .filter(c => c.data_pagamento)
-          .filter(c => {
-            const pagamento = new Date(c.data_pagamento);
-            return pagamento.getDate() === day &&
-              pagamento.getMonth() === dataReferencia.getMonth() &&
-              pagamento.getFullYear() === dataReferencia.getFullYear();
-          })
-          .reduce((sum, c) => sum + Number(c.valor), 0);
-        
-        if (isMesAtual && day > hoje.getDate()) {
-          valores.push(acumulado);
-        } else {
-          acumulado += paidOfDay;
-          valores.push(acumulado);
-        }
-      }
-
-      const inadimplenciaLabels = ['Pago', 'A Vencer', 'Atrasado'];
-      const inadimplenciaValores = [
-        chargesPagas.reduce((sum, c) => sum + Number(c.valor), 0),
-        chargesPendentes.filter(c => !isVencido(c.data_vencimento)).reduce((sum, c) => sum + Number(c.valor), 0),
-        chargesVencidas.reduce((sum, c) => sum + Number(c.valor), 0)
-      ];
-
-      const perdaAtrasoLabels: string[] = [];
-      const perdaAtrasoValores: number[] = [];
+      const mesAtual = hoje.getMonth();
+      const anoAtual = hoje.getFullYear();
       
-      for (let i = 5; i >= 0; i--) {
-        const mes = new Date(dataReferencia.getFullYear(), dataReferencia.getMonth() - i, 1);
-        const inicio = new Date(mes.getFullYear(), mes.getMonth(), 1);
-        const fim = new Date(mes.getFullYear(), mes.getMonth() + 1, 0);
-        
-        const chargesAtrasadasDoMes = allCharges.filter(c => {
+      const faturamentoMes = allCharges
+        .filter(c => c.status === 'pago' && c.data_pagamento)
+        .filter(c => {
+          const pagamento = new Date(c.data_pagamento);
+          return pagamento.getMonth() === mesAtual && pagamento.getFullYear() === anoAtual;
+        })
+        .reduce((sum, c) => sum + Number(c.valor), 0);
+      
+      const faturamentoTotal = allCharges
+        .filter(c => c.status === 'pago')
+        .reduce((sum, c) => sum + Number(c.valor), 0);
+      
+      const atrasoTotal = allCharges
+        .filter(c => c.status === 'pendente' && isVencido(c.data_vencimento))
+        .reduce((sum, c) => sum + Number(c.valor), 0);
+      
+      const atrasoNoMes = allCharges
+        .filter(c => c.status === 'pendente' && isVencido(c.data_vencimento))
+        .filter(c => {
           const vencimento = new Date(c.data_vencimento);
-          return vencimento >= inicio && vencimento <= fim && c.status === 'pendente' && isVencido(c.data_vencimento);
-        });
-        
-        perdaAtrasoLabels.push(format(mes, 'MMM', { locale: ptBR }));
-        perdaAtrasoValores.push(chargesAtrasadasDoMes.reduce((sum, c) => sum + Number(c.valor), 0));
-      }
+          return vencimento.getMonth() === mesAtual && vencimento.getFullYear() === anoAtual;
+        })
+        .reduce((sum, c) => sum + Number(c.valor), 0);
 
-      const projection = calculateProjection(allCharges, 6);
-      const projectionLabels = projection.map(p => format(p.mes, 'MMM', { locale: ptBR }));
-      const projectionAVencer = projection.map(p => p.aVencer);
-      const projectionMesmoPeriodo = projection.map(p => p.mesmoPeriodoAnoAnterior);
-
-      const { inicio, fim } = { inicio: new Date(dataReferencia.getFullYear(), dataReferencia.getMonth(), 1), fim: new Date(dataReferencia.getFullYear(), dataReferencia.getMonth() + 1, 0) };
-      const cobrancasVencedasNoMes = allCharges.filter(c => {
-        const vencimento = new Date(c.data_vencimento);
-        return vencimento >= inicio && vencimento <= fim;
-      });
-      const totalVencedasNoMes = cobrancasVencedasNoMes.reduce((sum, c) => sum + Number(c.valor), 0);
-      const totalPagoDasVencedasNoMes = cobrancasVencedasNoMes.reduce((sum, c) => sum + Number(c.valor_pago || 0), 0);
-      const taxaRecuperacao = totalVencedasNoMes > 0 ? (totalPagoDasVencedasNoMes / totalVencedasNoMes) * 100 : 0;
+      const chargesChartData = getChargesByMonth(allCharges);
+      const statusChartData = getStatusDistribution(allCharges);
+      const clientsChartData = getClientsEvolution(clients);
 
       setData({
         totalClientes: clients.length,
-        totalCobrancas: allCharges.length,
-        cobrancasPagas: chargesPagas.length,
-        cobrancasPendentes: chargesPendentes.length,
-        cobrancasVencidas: chargesVencidas.length,
-        faturamentoMes: metricasMes.faturamentoNoMes,
+        cobrancasPagas: allCharges.filter(c => c.status === 'pago').length,
+        cobrancasPendentes: allCharges.filter(c => c.status === 'pendente' && !isVencido(c.data_vencimento)).length,
+        cobrancasVencidas: allCharges.filter(c => c.status === 'pendente' && isVencido(c.data_vencimento)).length,
+        faturamentoMes,
         faturamentoTotal,
-        totalAtrasado: chargesVencidas.reduce((sum, c) => sum + Number(c.valor), 0),
-        menorScore: 0,
-        chargesProximasVencer,
-        chargesRecentes,
-        topDevedores,
-        dadosGrafico: { labels, valores },
-        dadosInadimplencia: { labels: inadimplenciaLabels, valores: inadimplenciaValores },
-        dadosPerdaAtraso: { labels: perdaAtrasoLabels, valores: perdaAtrasoValores },
-        projectionData: { labels: projectionLabels, aVencer: projectionAVencer, mesmoPeriodoAnoAnterior: projectionMesmoPeriodo },
-        metricasMes,
-        atrasoDesdeInicio,
+        atrasoTotal,
         atrasoNoMes,
-        taxaRecuperacao
+        allCharges,
+        chargesProximasVencer: allCharges.filter(c => c.status === 'pendente' && !isVencido(c.data_vencimento)).sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime()).slice(0, 5),
+        chargesRecentes: allCharges.slice(0, 8),
+        topDevedores: clients.filter(c => Number(c.total_atrasado) > 0).slice(0, 5),
+        chargesChartData,
+        statusChartData,
+        clientsChartData
       });
-
       setIsLoading(false);
     }
-
     loadDashboard();
   }, []);
 
   if (isLoading || !data) return <DashboardSkeleton />;
 
-  const { totalClientes, cobrancasVencidas, faturamentoTotal, totalAtrasado, chargesProximasVencer, chargesRecentes, topDevedores, dadosGrafico, dadosPerdaAtraso, projectionData, metricasMes, atrasoDesdeInicio, atrasoNoMes, taxaRecuperacao } = data;
-
-  const chartData = {
-    labels: dadosGrafico.labels,
-    datasets: [
-      {
-        label: 'Faturamento Acumulado',
-        data: dadosGrafico.valores,
-        borderColor: '#10b981',
-        backgroundColor: (context: any) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 256);
-          gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
-          gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
-          return gradient;
-        },
-        fill: true,
-        tension: 0.4,
-        pointRadius: 0,
-        borderWidth: 2,
-      },
-    ],
-  };
-
-  const inadimplenciaData = {
-    labels: data.dadosInadimplencia.labels,
-    datasets: [
-      {
-        data: data.dadosInadimplencia.valores,
-        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-        borderWidth: 0,
-      }
-    ]
-  };
-
-  const perdaAtrasoData = {
-    labels: dadosPerdaAtraso.labels,
-    datasets: [
-      {
-        label: 'Perda por Atraso',
-        data: dadosPerdaAtraso.valores,
-        backgroundColor: '#ef4444',
-        borderRadius: 6,
-      },
-    ],
-  };
-
-  const projectionChartData = {
-    labels: projectionData.labels,
-    datasets: [
-      {
-        label: 'A Vencer',
-        data: projectionData.aVencer,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        borderWidth: 2,
-      },
-      {
-        label: 'Mesmo Período Ano Anterior',
-        data: projectionData.mesmoPeriodoAnoAnterior,
-        borderColor: '#8b5cf6',
-        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        borderWidth: 2,
-        borderDash: [5, 5],
-      },
-    ],
-  };
-
-  const chartOptions: any = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        padding: 12,
-        cornerRadius: 8,
-        callbacks: {
-          label: (context: any) => formatCurrency(context.raw),
-        },
-      },
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: '#737373', font: { size: 11 } }, border: { display: false } },
-      y: { grid: { color: 'rgba(115, 115, 115, 0.1)' }, ticks: { color: '#737373', font: { size: 11 }, callback: (value: any) => formatCurrency(Number(value)) }, border: { display: false } },
-    },
-  };
-
-  const projectionChartOptions: any = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { 
-        display: true,
-        position: 'top',
-        labels: { color: '#737373', font: { size: 11 }, boxWidth: 12, padding: 8 }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        padding: 12,
-        cornerRadius: 8,
-        callbacks: {
-          label: (context: any) => formatCurrency(context.raw),
-        },
-      },
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: '#737373', font: { size: 11 } }, border: { display: false } },
-      y: { grid: { color: 'rgba(115, 115, 115, 0.1)' }, ticks: { color: '#737373', font: { size: 11 }, callback: (value: any) => formatCurrency(Number(value)) }, border: { display: false } },
-    },
-  };
-
-  const barChartOptions: any = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        padding: 12,
-        cornerRadius: 8,
-        callbacks: {
-          label: (context: any) => formatCurrency(context.raw),
-        },
-      },
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: '#737373', font: { size: 11 } }, border: { display: false } },
-      y: { grid: { color: 'rgba(115, 115, 115, 0.1)' }, ticks: { color: '#737373', font: { size: 11 }, callback: (value: any) => formatCurrency(Number(value)) }, border: { display: false } },
-    },
-  };
-
-  const doughnutOptions: any = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { 
-        position: 'right',
-        labels: { color: '#737373', font: { size: 11 }, boxWidth: 12, padding: 8 }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        padding: 12,
-        cornerRadius: 8,
-        callbacks: {
-          label: (context: any) => formatCurrency(context.raw),
-        },
-      },
-    },
-  };
+  const { totalClientes, cobrancasPagas, cobrancasPendentes, cobrancasVencidas, faturamentoMes, faturamentoTotal, atrasoTotal, atrasoNoMes, chargesProximasVencer, chargesRecentes, topDevedores, chargesChartData, statusChartData, clientsChartData, allCharges } = data;
+  
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth();
+  const anoAtual = hoje.getFullYear();
+  
+  const cobrancasEsteMes = allCharges.filter((c: any) => {
+    const vencimento = new Date(c.data_vencimento);
+    return vencimento.getMonth() === mesAtual && vencimento.getFullYear() === anoAtual;
+  });
+  
+  const cobrancasPagasEsteMes = cobrancasEsteMes.filter((c: any) => c.status === 'pago').length;
+  const cobrancasAtrasadasEsteMes = cobrancasEsteMes.filter((c: any) => c.status === 'pendente' && isVencido(c.data_vencimento)).length;
 
   return (
-    <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
-      <div className={`opacity-0 ${mounted ? 'animate-fade-up' : ''}`}>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Financeiro</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Visão geral financeira do seu negócio</p>
+    <motion.div initial="initial" animate="animate" variants={stagger} className="space-y-6">
+      <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extralight tracking-tight">Financeiro</h1>
+          <p className="text-slate-400 font-light mt-1">Visão completa do seu negócio</p>
+        </div>
+        <div className="flex gap-3">
+          <Link href="/dashboard/charges/new">
+            <Button className="bg-accent text-black"><Plus className="w-4 h-4 mr-2" />Nova Cobrança</Button>
+          </Link>
+        </div>
+      </motion.div>
+
+      <motion.div variants={fadeIn} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={DollarSign} title="Faturamento do Mês" value={formatCurrency(faturamentoMes)} sub={`${allCharges.filter((c: any) => c.status === 'pago' && c.data_pagamento && new Date(c.data_pagamento).getMonth() === new Date().getMonth()).length} cobranças pagas este mês`} color="accent" delay={0} />
+        <StatCard icon={TrendingUp} title="Faturamento Total" value={formatCurrency(faturamentoTotal)} sub="Total recebido" color="accent" delay={1} />
+        <StatCard icon={AlertOctagon} title="Atraso Total" value={formatCurrency(atrasoTotal)} sub={`${cobrancasVencidas} cobranças vencidas`} color="danger" delay={2} />
+        <StatCard icon={Clock} title="Atraso no Mês" value={formatCurrency(atrasoNoMes)} sub="Valores vencidos neste mês" color="warning" delay={3} />
+      </motion.div>
+
+      <motion.div variants={fadeIn} className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <QuickStat icon={Users} label="Total Clientes" value={totalClientes} delay={4} />
+        <QuickStat icon={Receipt} label="Cobranças" value={cobrancasEsteMes.length} delay={5} />
+        <QuickStat icon={CheckCircle} label="Pagas no Mês" value={cobrancasPagasEsteMes} color="text-accent" delay={6} />
+        <QuickStat icon={Clock} label="A Vencer" value={cobrancasEsteMes.filter((c: any) => c.status === 'pendente' && !isVencido(c.data_vencimento)).length} color="text-warning" delay={7} />
+        <QuickStat icon={AlertTriangle} label="Atraso" value={cobrancasAtrasadasEsteMes} color="text-danger" delay={8} />
+      </motion.div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        <motion.div variants={fadeIn}>
+          <div className="glass-card rounded-2xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"><BarChart3 className="w-5 h-5 text-accent" /></div>
+              <div><h3 className="font-light">Faturamento Mensal</h3></div>
+            </div>
+            <div className="h-48">
+              <Line 
+                data={chargesChartData} 
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div variants={fadeIn}>
+          <div className="glass-card rounded-2xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"><PieChart className="w-5 h-5 text-accent" /></div>
+              <div><h3 className="font-light">Status das Cobranças</h3></div>
+            </div>
+            <div className="h-48 flex items-center justify-center">
+              <Pie 
+                data={statusChartData} 
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { position: 'right', labels: { color: '#94a3b8', padding: 15, usePointStyle: true } } }
+                }}
+              />
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Cards de Métricas Principais */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className={`glass-card rounded-xl sm:rounded-2xl p-3 sm:p-5 opacity-0 ${mounted ? 'animate-fade-up' : ''}`} style={{ animationDelay: '80ms' }}>
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center bg-accent/10">
-              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-            </div>
-          </div>
-          <p className="text-lg sm:text-2xl font-bold">{formatCurrency(metricasMes.faturamentoNoMes)}</p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Faturamento do Mês</p>
-          <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 hidden sm:block">{metricasMes.cobrancasPagasNoMes} cobranças pagas no mês</p>
-        </div>
-
-        <div className={`glass-card rounded-xl sm:rounded-2xl p-3 sm:p-5 opacity-0 ${mounted ? 'animate-fade-up' : ''}`} style={{ animationDelay: '160ms' }}>
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center bg-accent/10">
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-            </div>
-          </div>
-          <p className="text-lg sm:text-2xl font-bold">{formatCurrency(faturamentoTotal)}</p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Faturamento Total</p>
-          <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 hidden sm:block">Desde o início</p>
-        </div>
-
-        <div className={`glass-card rounded-xl sm:rounded-2xl p-3 sm:p-5 opacity-0 ${mounted ? 'animate-fade-up' : ''}`} style={{ animationDelay: '240ms' }}>
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center bg-danger/10">
-              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-danger" />
-            </div>
-          </div>
-          <p className="text-lg sm:text-2xl font-bold text-danger">{formatCurrency(atrasoDesdeInicio)}</p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Atraso Total</p>
-          <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 hidden sm:block">{cobrancasVencidas} cobranças</p>
-        </div>
-
-        <div className={`glass-card rounded-xl sm:rounded-2xl p-3 sm:p-5 opacity-0 ${mounted ? 'animate-fade-up' : ''}`} style={{ animationDelay: '320ms' }}>
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center bg-danger/10">
-              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-danger" />
-            </div>
-          </div>
-          <p className="text-lg sm:text-2xl font-bold text-danger">{formatCurrency(atrasoNoMes)}</p>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Atraso no Mês</p>
-          <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 hidden sm:block">Valor atrasado no mês</p>
-        </div>
-      </div>
-
-      {/* Stats Rápidas */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {[
-          { label: 'Total de Clientes', value: totalClientes, icon: Users, color: 'gray' },
-          { label: 'Cobranças no Mês', value: metricasMes.cobrancasNoMes, icon: Receipt, color: 'gray' },
-          { label: 'Cobranças Pagas no Mês', value: metricasMes.cobrancasPagasNoMes, icon: CheckCircle, color: 'accent' },
-          { label: 'Cobranças Atrasadas no Mês', value: metricasMes.cobrancasAtrasadasNoMes, icon: AlertTriangle, color: 'danger' },
-        ].map((stat, i) => (
-          <div key={stat.label} className={`glass-card rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-4 opacity-0 ${mounted ? 'animate-fade-up' : ''}`} style={{ animationDelay: `${(i + 5) * 80}ms` }}>
-            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${stat.color === 'accent' ? 'bg-accent/10' : stat.color === 'danger' ? 'bg-danger/10' : 'bg-gray-100 dark:bg-gray-800'}`}>
-              <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color === 'accent' ? 'text-accent' : stat.color === 'danger' ? 'text-danger' : 'text-gray-500'}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-base sm:text-xl font-bold truncate">{stat.value}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 truncate">{stat.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-        {/* Gráfico de Faturamento Mensal */}
-        <div className={`xl:col-span-2 glass-card rounded-2xl p-4 sm:p-6 opacity-0 ${mounted ? 'animate-fade-up animate-delay-300' : ''}`}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold">Faturamento do Mês</h3>
-              <p className="text-xs sm:text-sm text-gray-500">Evolução acumulada</p>
-            </div>
-          </div>
-          <div className="h-40 sm:h-56 lg:h-64 min-w-0 overflow-hidden">
-            <Line data={chartData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* Gráfico de Inadimplência */}
-        <div className={`glass-card rounded-2xl p-4 sm:p-6 opacity-0 ${mounted ? 'animate-fade-up animate-delay-400' : ''}`}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold">Status</h3>
-              <p className="text-xs sm:text-sm text-gray-500">Visão geral</p>
-            </div>
-          </div>
-          <div className="h-40 sm:h-56 lg:h-64 min-w-0 overflow-hidden">
-            <Doughnut data={inadimplenciaData} options={doughnutOptions} />
-          </div>
-        </div>
-      </div>
-
-      {/* Gráficos de Perda e Projeção */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Perda por Atraso */}
-        <div className={`glass-card rounded-2xl p-4 sm:p-6 opacity-0 ${mounted ? 'animate-fade-up animate-delay-500' : ''}`}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold">Perda por Atraso no Mês</h3>
-              <p className="text-xs sm:text-sm text-gray-500">Valor perdido por mês</p>
-            </div>
-          </div>
-          <div className="h-40 sm:h-48 lg:h-56 min-w-0 overflow-hidden">
-            <Bar data={perdaAtrasoData} options={barChartOptions} />
-          </div>
-        </div>
-
-        {/* Projeção */}
-        <div className={`glass-card rounded-2xl p-4 sm:p-6 opacity-0 ${mounted ? 'animate-fade-up animate-delay-600' : ''}`}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold">Projeção de Valores a Vencer</h3>
-              <p className="text-xs sm:text-sm text-gray-500">Valores a receber por mês + mesmo período ano anterior</p>
-            </div>
-          </div>
-          <div className="h-40 sm:h-48 lg:h-56 min-w-0 overflow-hidden">
-            <Line data={projectionChartData} options={projectionChartOptions} />
-          </div>
-        </div>
-      </div>
-
-      {/* Listas */}
-      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Top Devedores */}
-        <div className={`glass-card rounded-2xl p-4 sm:p-6 opacity-0 ${mounted ? 'animate-fade-up animate-delay-500' : ''}`}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold">Maiores Devedores</h3>
-              <p className="text-xs sm:text-sm text-gray-500">Clientes com mais dívida</p>
-            </div>
-            <Link href="/dashboard/ranking" className="text-accent text-xs sm:text-sm hover:underline whitespace-nowrap">Ver ranking</Link>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            {topDevedores.length === 0 ? (
-              <p className="text-gray-500 text-xs sm:text-sm text-center py-4">Nenhum devedor</p>
-            ) : (
-              topDevedores.map((cliente, i) => (
-                <div key={cliente.id} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs ${i === 0 ? 'bg-yellow-500/20 text-yellow-500' : i === 1 ? 'bg-gray-400/20 text-gray-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
-                      {i + 1}
+      <div className="grid lg:grid-cols-3 gap-6">
+        <motion.div variants={fadeIn} className="lg:col-span-2">
+          <GlassCard title="Atividade Recente" icon={Activity} href="/dashboard/charges">
+            {chargesRecentes.length === 0 ? <EmptyState message="Nenhuma cobrança еще" /> : 
+              chargesRecentes.map((charge: any) => {
+                const vencido = isVencido(charge.data_vencimento) && charge.status === 'pendente';
+                return (
+                  <Link key={charge.id} href={`/dashboard/charges/${charge.id}`} className="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
+                    <div className="flex items-center gap-4">
+                      <StatusIcon status={charge.status} date={charge.data_vencimento} />
+                      <div><p className="font-light">{charge.client?.nome || 'Cliente'}</p><p className="text-xs text-slate-500">{charge.descricao || 'Cobrança'}</p></div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-xs sm:text-sm truncate max-w-[60px] sm:max-w-[80px] lg:max-w-[100px]">{cliente.nome}</p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">Score: {cliente.score}</p>
-                    </div>
-                  </div>
-                  <p className="font-bold text-danger text-xs sm:text-sm whitespace-nowrap">{formatCurrency(Number(cliente.total_atrasado))}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+                    <div className="text-right"><p className={`font-light ${charge.status === 'pago' ? 'text-accent' : vencido ? 'text-danger' : 'text-warning'}`}>{formatCurrency(Number(charge.valor))}</p><p className="text-xs text-slate-500">{charge.status === 'pago' ? 'Pago' : vencido ? `${calcularDiasAtraso(charge.data_vencimento)}d atraso` : formatDate(charge.data_vencimento)}</p></div>
+                  </Link>
+                );
+              })}
+          </GlassCard>
+        </motion.div>
 
-        {/* Próximas a Vencer */}
-        <div className={`glass-card rounded-2xl overflow-hidden opacity-0 ${mounted ? 'animate-fade-up animate-delay-600' : ''}`}>
-          <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold">Próximas a Vencer</h3>
-                <p className="text-xs sm:text-sm text-gray-500">Nos próximos dias</p>
-              </div>
-              <Clock className="w-5 h-5 text-yellow-500" />
-            </div>
-          </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-800/50">
-            {chargesProximasVencer.length === 0 ? (
-              <p className="text-gray-500 text-xs sm:text-sm text-center py-6">Nenhuma cobrança próxima</p>
-            ) : (
+        <motion.div variants={fadeIn}>
+          <GlassCard title="Próximas a Vencer" icon={Clock}>
+            {chargesProximasVencer.length === 0 ? <EmptyState message="Nenhuma cobrança" /> :
               chargesProximasVencer.map((charge: any) => {
                 const diasUntil = Math.ceil((new Date(charge.data_vencimento).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                 return (
-                  <Link key={charge.id} href={`/dashboard/charges/${charge.id}`} className="flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-white/5">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-                        <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none">{charge.client?.nome || 'Cliente'}</p>
-                        <p className="text-[10px] sm:text-xs text-gray-500">{formatDate(charge.data_vencimento)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right ml-2">
-                      <p className="font-bold text-sm sm:text-base">{formatCurrency(Number(charge.valor))}</p>
-                      <p className="text-[10px] sm:text-xs text-yellow-500">{diasUntil === 1 ? 'amanhã' : `${diasUntil} dias`}</p>
-                    </div>
+                  <Link key={charge.id} href={`/dashboard/charges/${charge.id}`} className="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
+                    <div><p className="font-light">{charge.client?.nome || 'Cliente'}</p><p className="text-xs text-slate-500">{formatDate(charge.data_vencimento)}</p></div>
+                    <div className="text-right"><p className="font-light">{formatCurrency(Number(charge.valor))}</p><Badge variant={diasUntil <= 1 ? 'warning' : 'default'} className="text-xs">{diasUntil === 1 ? 'amanhã' : `${diasUntil} dias`}</Badge></div>
                   </Link>
                 );
-              })
-            )}
-          </div>
-        </div>
+              })}
+          </GlassCard>
+        </motion.div>
+      </div>
 
-        {/* Cobranças Recentes */}
-        <div className={`glass-card rounded-2xl overflow-hidden opacity-0 ${mounted ? 'animate-fade-up animate-delay-700' : ''}`}>
-          <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold">Atividade Recente</h3>
-                <p className="text-xs sm:text-sm text-gray-500">Últimas cobranças</p>
-              </div>
-              <Receipt className="w-5 h-5 text-gray-400" />
-            </div>
-          </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-800/50">
-            {chargesRecentes.length === 0 ? (
-              <p className="text-gray-500 text-xs sm:text-sm text-center py-6">Nenhuma cobrança ainda</p>
-            ) : (
-              chargesRecentes.map((charge: any) => {
-                const vencido = isVencido(charge.data_vencimento) && charge.status === 'pendente';
-                const diasAtraso = charge.dias_atraso || calcularDiasAtraso(charge.data_vencimento);
-                return (
-                  <Link key={charge.id} href={`/dashboard/charges/${charge.id}`} className="flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-white/5">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${charge.status === 'pago' ? 'bg-accent/10' : vencido ? 'bg-danger/10' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                        {charge.status === 'pago' ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-accent" /> : vencido ? <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-danger" /> : <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-xs sm:text-sm truncate max-w-[60px] sm:max-w-[100px]">{charge.client?.nome || 'Cliente'}</p>
-                        <p className="text-[10px] sm:text-xs text-gray-500 truncate max-w-[80px] sm:max-w-[120px]">{charge.descricao || 'Cobrança'}</p>
-                      </div>
-                    </div>
-                    <div className="text-right ml-2">
-                      <p className={`font-bold text-xs sm:text-base ${charge.status === 'pago' ? 'text-accent' : vencido ? 'text-danger' : ''}`}>
-                        {formatCurrency(Number(charge.valor))}
-                      </p>
-                      <p className={`text-[10px] sm:text-xs ${charge.status === 'pago' ? 'text-accent' : vencido ? 'text-danger' : 'text-gray-500'}`}>
-                        {charge.status === 'pago' ? 'Pago' : vencido ? `${diasAtraso}d atrasado` : formatDate(charge.data_vencimento)}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-          <Link href="/dashboard/charges" className="block p-3 sm:p-4 text-center text-xs sm:text-sm text-accent hover:bg-gray-50 dark:hover:bg-white/5 border-t border-gray-100 dark:border-gray-800">
-            Ver todas as cobranças <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 inline ml-1" />
-          </Link>
+      <motion.div variants={fadeIn}>
+        <GlassCard title="Maiores Devedores" icon={TrendingDown} href="/dashboard/ranking" linkText="Ver ranking">
+          {topDevedores.length === 0 ? <EmptyState message="Nenhum devedor - tudo em dia!" /> :
+            topDevedores.map((cliente: any, i: number) => (
+              <Link key={cliente.id} href={`/dashboard/clients/${cliente.id}`} className="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-light text-sm ${i === 0 ? 'bg-warning/20 text-warning' : i === 1 ? 'bg-slate-700 text-slate-400' : 'bg-white/10 text-slate-500'}`}>{i + 1}</div>
+                  <div><p className="font-light">{cliente.nome}</p><p className="text-xs text-slate-500">Score: {cliente.score}</p></div>
+                </div>
+                <p className="font-light text-danger">{formatCurrency(Number(cliente.total_atrasado))}</p>
+              </Link>
+            ))}
+        </GlassCard>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function getChargesByMonth(charges: any[]) {
+  const meses = [];
+  const hoje = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    meses.push({
+      mes: data.toLocaleDateString('pt-BR', { month: 'short' }),
+      data: data
+    });
+  }
+
+  const valores = meses.map(m => {
+    return charges
+      .filter(c => {
+        if (!c.data_pagamento || c.status !== 'pago') return false;
+        const pagamento = new Date(c.data_pagamento);
+        return pagamento.getMonth() === m.data.getMonth() && pagamento.getFullYear() === m.data.getFullYear();
+      })
+      .reduce((sum, c) => sum + Number(c.valor), 0);
+  });
+
+  return {
+    labels: meses.map(m => m.mes),
+    datasets: [{
+      label: 'Faturamento',
+      data: valores,
+      borderColor: '#10B981',
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  };
+}
+
+function getStatusDistribution(charges: any[]) {
+  const paga = charges.filter(c => c.status === 'pago').length;
+  const pendente = charges.filter(c => c.status === 'pendente' && !isVencido(c.data_vencimento)).length;
+  const atrasada = charges.filter(c => c.status === 'pendente' && isVencido(c.data_vencimento)).length;
+
+  return {
+    labels: ['Pagas', 'A Vencer', 'Atraso'],
+    datasets: [{
+      data: [paga, pendente, atrasada],
+      backgroundColor: ['#10B981', '#F97316', '#EF4444'],
+      borderWidth: 0
+    }]
+  };
+}
+
+function getClientsEvolution(clients: any[]) {
+  const meses = [];
+  const hoje = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    meses.push(data);
+  }
+
+  const valores = meses.map(m => {
+    return clients.filter(c => {
+      const created = new Date(c.created_at);
+      return created.getMonth() === m.getMonth() && created.getFullYear() === m.getFullYear();
+    }).length;
+  });
+
+  return {
+    labels: meses.map(m => m.toLocaleDateString('pt-BR', { month: 'short' })),
+    datasets: [{
+      label: 'Novos Clientes',
+      data: valores,
+      backgroundColor: '#10B981',
+      borderRadius: 6
+    }]
+  };
+}
+
+function StatCard({ icon: Icon, title, value, sub, color, delay }: { icon: any; title: string; value: string; sub: string; color: string; delay: number }) {
+  const colorClasses: any = { accent: 'bg-accent/10 text-accent', danger: 'bg-danger/10 text-danger', warning: 'bg-warning/10 text-warning' };
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: delay * 0.1 }}
+      className="glass-card rounded-2xl p-5 hover:-translate-y-1 transition-all group cursor-pointer">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`w-12 h-12 rounded-xl ${colorClasses[color as keyof typeof colorClasses]} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+          <Icon className="w-6 h-6" />
         </div>
       </div>
+      <p className="text-2xl font-extralight">{value}</p>
+      <p className="text-sm text-slate-400 font-light">{title}</p>
+      <p className="text-xs text-slate-600 font-light mt-1">{sub}</p>
+    </motion.div>
+  );
+}
+
+function QuickStat({ icon: Icon, label, value, color, delay, isCurrency }: { icon: any; label: string; value: number | string; color?: string; delay: number; isCurrency?: boolean }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: delay * 0.1 }}
+      className="glass-card rounded-xl p-4 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+        <Icon className={`w-5 h-5 ${color || 'text-slate-400'}`} />
+      </div>
+      <div><p className="text-xl font-extralight">{isCurrency ? value : value}</p><p className="text-xs text-slate-500 font-light">{label}</p></div>
+    </motion.div>
+  );
+}
+
+function GlassCard({ title, icon: Icon, children, href, linkText }: { title: string; icon: any; children: React.ReactNode; href?: string; linkText?: string }) {
+  return (
+    <div className="glass-card rounded-2xl overflow-hidden">
+      <div className="p-5 border-b border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"><Icon className="w-5 h-5 text-accent" /></div>
+          <div><h3 className="font-light">{title}</h3></div>
+        </div>
+        {href && <Link href={href} className="text-sm text-accent hover:underline flex items-center gap-1">{linkText || 'Ver'} <ChevronRight className="w-4 h-4" /></Link>}
+      </div>
+      <div className="divide-y divide-white/5">{children}</div>
     </div>
   );
+}
+
+function StatusIcon({ status, date }: { status: string; date: string }) {
+  const vencido = isVencido(date) && status === 'pendente';
+  const classes = status === 'pago' ? 'bg-accent/10' : vencido ? 'bg-danger/10' : 'bg-warning/10';
+  const icon = status === 'pago' ? CheckCircle : vencido ? AlertTriangle : Clock;
+  return <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${classes}`}></div>;
+}
+
+function EmptyState({ message }: { message: string }) {
+  return <div className="p-8 text-center text-slate-500 font-light">{message}</div>;
 }

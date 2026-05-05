@@ -436,7 +436,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <h1 className="text-lg sm:text-2xl font-bold truncate max-w-[150px] sm:max-w-none">{charge.descricao || 'Cobrança'}</h1>
+          <h1 className="text-lg sm:text-2xl font-extralight truncate max-w-[150px] sm:max-w-none">{charge.descricao || 'Cobrança'}</h1>
         </div>
         <div className="flex gap-1 sm:gap-2">
           <Button variant="outline" size="sm" onClick={handleOpenEditModal} className="p-2">
@@ -451,7 +451,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
       <Card>
         <CardContent className="p-4 sm:p-8">
           <div className="text-center mb-4 sm:mb-8">
-            <p className={`text-3xl sm:text-5xl font-bold ${charge.status === 'pago' ? 'text-primary' : vencido ? 'text-danger' : ''}`}>
+            <p className={`text-3xl sm:text-5xl font-extralight ${charge.status === 'pago' ? 'text-primary' : vencido ? 'text-danger' : ''}`}>
               {charge.status === 'parcial' ? formatCurrency(valorPendente) : formatCurrency(Number(charge.valor))}
             </p>
             {charge.status === 'parcial' && (
@@ -478,7 +478,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
             ) : charge.status === 'parcial' ? (
               <Badge variant="warning" className="text-xs sm:text-sm px-3 sm:px-4 py-1">Parcial</Badge>
             ) : vencido ? (
-              <Badge variant="danger" className="text-xs sm:text-sm px-3 sm:px-4 py-1">{diasAtraso}d atrasado</Badge>
+              <Badge variant="danger" className="text-xs sm:text-sm px-3 sm:px-4 py-1">{diasAtraso}d atraso</Badge>
             ) : (
               <Badge variant="default" className="text-xs sm:text-sm px-3 sm:px-4 py-1">A Vencer</Badge>
             )}
@@ -504,7 +504,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
               )}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-medium text-sm sm:text-base"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-light text-sm sm:text-base"
             >
               <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
               Cobrar via WhatsApp
@@ -524,7 +524,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
               )}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-medium text-sm sm:text-base"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-light text-sm sm:text-base"
             >
               <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
               Cobrar via WhatsApp
@@ -539,16 +539,16 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
             <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3 sm:gap-4">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-lg sm:text-xl font-bold text-primary">
+                  <span className="text-lg sm:text-xl font-extralight text-primary">
                     {client.nome.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="text-center sm:text-left">
-                  <p className="text-base sm:text-lg font-semibold">{client.nome}</p>
+                  <p className="text-base sm:text-lg font-light">{client.nome}</p>
                   <p className="text-xs sm:text-sm text-gray-500">{client.telefone ? formatPhone(client.telefone) : 'Sem telefone'}</p>
                 </div>
               </div>
-              <span className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold ${
+              <span className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-extralight ${
                 client.score >= 80 ? 'bg-primary/10 text-primary' :
                 client.score >= 60 ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400' :
                 'bg-danger/10 text-danger'
@@ -571,7 +571,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
             </div>
             <button
               onClick={() => setDeleteRelatedModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger/10 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-light text-danger hover:bg-danger/10 rounded-lg transition-colors"
             >
               <Ban className="w-3 h-3" />
               Excluir todas
@@ -620,7 +620,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
                     </svg>
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-amber-900 dark:text-amber-100">Pagamento Parcial</p>
+                    <p className="font-light text-amber-900 dark:text-amber-100">Pagamento Parcial</p>
                     <p className="text-xs text-amber-700 dark:text-amber-400">Receber apenas uma parte</p>
                   </div>
                 </div>
@@ -642,7 +642,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <span className="text-sm font-semibold text-amber-900 dark:text-amber-100">Pagamento Parcial</span>
+                  <span className="text-sm font-light text-amber-900 dark:text-amber-100">Pagamento Parcial</span>
                 </div>
                 <button
                   type="button"
@@ -650,7 +650,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
                     setIsPartialPayment(false);
                     setPartialPaymentAmount('');
                   }}
-                  className="px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 hover:bg-amber-200 dark:hover:bg-amber-900 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-xs font-light text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 hover:bg-amber-200 dark:hover:bg-amber-900 rounded-lg transition-colors"
                 >
                   Cancelar
                 </button>

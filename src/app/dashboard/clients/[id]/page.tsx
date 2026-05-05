@@ -172,7 +172,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <h1 className="text-lg sm:text-2xl font-bold truncate">{client.nome}</h1>
+          <h1 className="text-lg sm:text-2xl font-extralight truncate">{client.nome}</h1>
         </div>
         <div className="flex gap-1 sm:gap-2">
           <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)} className="p-2">
@@ -203,15 +203,15 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
               <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                    <span className="text-xl sm:text-2xl font-bold text-primary">{client.nome.charAt(0).toUpperCase()}</span>
+                    <span className="text-xl sm:text-2xl font-extralight text-primary">{client.nome.charAt(0).toUpperCase()}</span>
                   </div>
                   <div className="text-center sm:text-left">
-                    <p className="text-lg sm:text-xl font-semibold">{client.nome}</p>
+                    <p className="text-lg sm:text-xl font-light">{client.nome}</p>
                     <p className="text-gray-500 text-sm">{client.telefone ? formatPhone(client.telefone) : 'Sem telefone'}</p>
                   </div>
                 </div>
                 <div className="text-center sm:text-right">
-                  <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-base sm:text-lg font-bold ${
+                  <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-base sm:text-lg font-extralight ${
                     client.score >= 80 ? 'bg-primary/10 text-primary' :
                     client.score >= 60 ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400' :
                     'bg-danger/10 text-danger'
@@ -223,11 +223,11 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
               <div className="grid grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100 dark:border-gray-800">
                 <div className="text-center">
-                  <p className="text-2xl sm:text-3xl font-bold text-primary">{formatCurrency(Number(client.total_pago))}</p>
+                  <p className="text-2xl sm:text-3xl font-extralight text-primary">{formatCurrency(Number(client.total_pago))}</p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">Total Pago</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl sm:text-3xl font-bold text-danger">{formatCurrency(Number(client.total_atrasado))}</p>
+                  <p className="text-2xl sm:text-3xl font-extralight text-danger">{formatCurrency(Number(client.total_atrasado))}</p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">Em Atraso</p>
                 </div>
               </div>
@@ -242,7 +242,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                   })), userName)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg mt-4 sm:mt-6 font-medium text-sm sm:text-base"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg mt-4 sm:mt-6 font-light text-sm sm:text-base"
                 >
                   <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
                   Cobrar via WhatsApp ({chargesToCobrar.length})
@@ -252,7 +252,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           </Card>
 
           <div className="flex items-center justify-between">
-              <h2 className="text-base sm:text-lg font-semibold">Cobranças</h2>
+              <h2 className="text-base sm:text-lg font-light">Cobranças</h2>
             <Link href={`/dashboard/charges/new?client=${client.id}`}>
               <Button size="sm" className="text-xs sm:text-sm">
                 <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
@@ -265,7 +265,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             <Card className="border-danger/30">
               <CardContent className="p-0">
                 <div className="p-3 sm:p-4 border-b border-gray-100 dark:border-gray-800">
-                  <h3 className="font-semibold text-danger text-sm sm:text-base">Em Atraso ({overdueCharges.length})</h3>
+                  <h3 className="font-light text-danger text-sm sm:text-base">Em Atraso ({overdueCharges.length})</h3>
                 </div>
                 {overdueCharges.map((charge) => {
                   const diasAtraso = charge.dias_atraso || calcularDiasAtraso(charge.data_vencimento);
@@ -276,11 +276,11 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                           <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-danger" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-danger text-sm sm:text-base truncate max-w-[100px] sm:max-w-none">{charge.descricao || 'Cobrança'}</p>
-                          <p className="text-[10px] sm:text-xs text-danger/70">{diasAtraso}d atrasado</p>
+                          <p className="font-light text-danger text-sm sm:text-base truncate max-w-[100px] sm:max-w-none">{charge.descricao || 'Cobrança'}</p>
+                          <p className="text-[10px] sm:text-xs text-danger/70">{diasAtraso}d atraso</p>
                         </div>
                       </div>
-                      <p className="font-bold text-danger text-sm sm:text-base">{formatCurrency(Number(charge.valor))}</p>
+                      <p className="font-extralight text-danger text-sm sm:text-base">{formatCurrency(Number(charge.valor))}</p>
                     </Link>
                   );
                 })}
@@ -292,7 +292,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             <Card className="border-orange-500/30">
               <CardContent className="p-0">
                 <div className="p-3 sm:p-4 border-b border-gray-100 dark:border-gray-800">
-                  <h3 className="font-semibold text-orange-500 text-sm sm:text-base">A Vencer ({pendingCharges.length})</h3>
+                  <h3 className="font-light text-orange-500 text-sm sm:text-base">A Vencer ({pendingCharges.length})</h3>
                 </div>
                 {pendingCharges.map((charge) => (
                   <Link key={charge.id} href={`/dashboard/charges/${charge.id}`} className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#000000]/50 last:border-0">
@@ -301,11 +301,11 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                         <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-orange-500 text-sm sm:text-base truncate max-w-[100px] sm:max-w-none">{charge.descricao || 'Cobrança'}</p>
+                        <p className="font-light text-orange-500 text-sm sm:text-base truncate max-w-[100px] sm:max-w-none">{charge.descricao || 'Cobrança'}</p>
                         <p className="text-[10px] sm:text-xs text-orange-500/70">Vence {formatDate(charge.data_vencimento)}</p>
                       </div>
                     </div>
-                    <p className="font-semibold text-orange-500 text-sm sm:text-base">{formatCurrency(Number(charge.valor))}</p>
+                    <p className="font-light text-orange-500 text-sm sm:text-base">{formatCurrency(Number(charge.valor))}</p>
                   </Link>
                 ))}
               </CardContent>
@@ -315,7 +315,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           <Card className="border-accent/30">
             <CardContent className="p-0">
               <div className="p-3 sm:p-4 border-b border-gray-100 dark:border-gray-800">
-                <h3 className="font-semibold text-accent text-sm sm:text-base">Pagas ({paidCharges.length})</h3>
+                <h3 className="font-light text-accent text-sm sm:text-base">Pagas ({paidCharges.length})</h3>
               </div>
               {paidCharges.length === 0 ? (
                 <div className="p-4 sm:p-6 text-center text-xs sm:text-sm text-gray-500">Nenhuma cobrança paga</div>
@@ -327,11 +327,11 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                         <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-accent text-sm sm:text-base truncate max-w-[100px] sm:max-w-none">{charge.descricao || 'Cobrança'}</p>
+                        <p className="font-light text-accent text-sm sm:text-base truncate max-w-[100px] sm:max-w-none">{charge.descricao || 'Cobrança'}</p>
                         <p className="text-[10px] sm:text-xs text-gray-500">Pago {formatDate(charge.data_pagamento!)}</p>
                       </div>
                     </div>
-                    <p className="font-semibold text-accent text-sm sm:text-base">{formatCurrency(Number(charge.valor))}</p>
+                    <p className="font-light text-accent text-sm sm:text-base">{formatCurrency(Number(charge.valor))}</p>
                   </Link>
                 ))
               )}

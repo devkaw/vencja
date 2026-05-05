@@ -3,11 +3,11 @@ import { Sora } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 import { ToastContainer } from '@/components/ui/toast';
-import { cn } from '@/lib/utils';
 
 const sora = Sora({ 
   subsets: ['latin'], 
   variable: '--font-sora',
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
 });
 
@@ -28,13 +28,13 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning className="dark">
       <head>
-        <template dangerouslySetInnerHTML={{
+        <script dangerouslySetInnerHTML={{
           __html: `
             document.documentElement.classList.add('dark');
           `,
         }} />
       </head>
-      <body className={cn(sora.variable, 'font-sans antialiased bg-black text-white overflow-x-hidden')}>
+      <body className={`${sora.variable} font-sans antialiased bg-black text-white`}>
         <Analytics />
         {children}
         <ToastContainer />

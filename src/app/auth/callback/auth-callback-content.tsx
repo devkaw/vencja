@@ -121,7 +121,7 @@ export default function AuthCallbackContent() {
               )}
             </div>
 
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-extralight text-gray-900 dark:text-white mb-2">
               {status === 'loading' ? 'Confirmando...' :
                status === 'success' ? 'Confirmado!' : 'Erro na Confirmação'}
             </h1>
@@ -137,7 +137,7 @@ export default function AuthCallbackContent() {
                 <div className="flex items-start gap-3">
                   <Mail className="w-5 h-5 text-green-600 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                    <p className="text-sm font-light text-green-800 dark:text-green-200">
                       Sua conta foi confirmada!
                     </p>
                     <p className="text-sm text-green-700 dark:text-green-300 mt-1">
@@ -148,7 +148,7 @@ export default function AuthCallbackContent() {
               </div>
 
               <Link href="/dashboard" className="block">
-                <button className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors">
+                <button className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-light rounded-lg transition-colors">
                   Ir para o Dashboard
                 </button>
               </Link>
@@ -166,7 +166,7 @@ export default function AuthCallbackContent() {
 
               <div className="flex gap-3">
                 <Link href="/login" className="flex-1">
-                  <button className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors">
+                  <button className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-light rounded-lg transition-colors">
                     Ir para Login
                   </button>
                 </Link>

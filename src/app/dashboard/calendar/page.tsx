@@ -141,7 +141,7 @@ export default function CalendarPage() {
   return (
     <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
       <div className={`opacity-0 ${mounted ? 'animate-fade-up' : ''}`}>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Calendário</h1>
+        <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight">Calendário</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Visualize suas cobranças por data</p>
       </div>
 
@@ -150,7 +150,7 @@ export default function CalendarPage() {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => toggleFilter('pagos')}
-            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`px-2 py-1 rounded text-xs font-light transition-colors ${
               filters.pagos ? 'bg-accent text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
             }`}
           >
@@ -159,7 +159,7 @@ export default function CalendarPage() {
           </button>
           <button
             onClick={() => toggleFilter('vencidos')}
-            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`px-2 py-1 rounded text-xs font-light transition-colors ${
               filters.vencidos ? 'bg-danger text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
             }`}
           >
@@ -168,16 +168,16 @@ export default function CalendarPage() {
           </button>
           <button
             onClick={() => toggleFilter('pendentes')}
-            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`px-2 py-1 rounded text-xs font-light transition-colors ${
               filters.pendentes ? 'bg-yellow-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
             }`}
           >
             <Clock className="w-3 h-3 inline mr-1" />
-            Pendentes
+            A Vencer
           </button>
           <button
             onClick={() => toggleFilter('criados')}
-            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`px-2 py-1 rounded text-xs font-light transition-colors ${
               filters.criados ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
             }`}
           >
@@ -187,7 +187,7 @@ export default function CalendarPage() {
           <button onClick={() => navegarMes('anterior')} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors ml-auto">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-sm font-medium min-w-[100px] text-center">{format(currentDate, 'MMMM yyyy', { locale: ptBR })}</span>
+          <span className="text-sm font-light min-w-[100px] text-center">{format(currentDate, 'MMMM yyyy', { locale: ptBR })}</span>
           <button onClick={() => navegarMes('proximo')} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -199,7 +199,7 @@ export default function CalendarPage() {
         {/* Dias da semana */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {diasSemana.map(dia => (
-            <div key={dia} className="text-center text-xs sm:text-sm font-medium text-gray-500 py-2">
+            <div key={dia} className="text-center text-xs sm:text-sm font-light text-gray-500 py-2">
               {dia}
             </div>
           ))}
@@ -235,7 +235,7 @@ export default function CalendarPage() {
                   ${isHoje ? 'bg-accent text-white hover:bg-accent' : ''}
                 `}
               >
-                <span className={`text-sm font-medium ${isHoje ? 'text-white' : isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600'}`}>
+                <span className={`text-sm font-light ${isHoje ? 'text-white' : isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600'}`}>
                   {format(dia, 'd')}
                 </span>
                 {temEventos && (
@@ -271,7 +271,7 @@ export default function CalendarPage() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <span>Pendente</span>
+            <span>A Vencer</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-500" />
@@ -285,7 +285,7 @@ export default function CalendarPage() {
         <div className={`glass-card rounded-xl overflow-hidden opacity-0 ${mounted ? 'animate-fade-up' : ''}`}>
           <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">{format(selectedDay, 'dd MMM yyyy', { locale: ptBR })}</h3>
+              <h3 className="text-lg font-light">{format(selectedDay, 'dd MMM yyyy', { locale: ptBR })}</h3>
               <p className="text-sm text-gray-500">
                 {totalEventos > 0 ? `${data.reduce((acc, d) => {
                   if (isSameDay(d.date, selectedDay)) {
@@ -315,7 +315,7 @@ export default function CalendarPage() {
                 if (tipo === 'criado' && !filters.criados) return null;
 
                 const corFundo = tipo === 'pago' ? 'bg-accent/10' : tipo === 'vencido' ? 'bg-danger/10' : tipo === 'pendente' ? 'bg-yellow-500/10' : 'bg-blue-500/10';
-                const corTexto = tipo === 'pago' ? 'text-accent' : tipo === 'vencido' ? 'text-danger' : '';
+                const corTexto = tipo === 'pago' ? 'text-accent' : tipo === 'vencido' ? 'text-danger' : 'text-warning';
 
                 return (
                   <Link
@@ -336,11 +336,11 @@ export default function CalendarPage() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-base truncate max-w-[180px]">{charge.client?.nome || 'Cliente'}</p>
+                        <p className="font-light text-base truncate max-w-[180px]">{charge.client?.nome || 'Cliente'}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-bold text-base ${corTexto}`}>
+                      <p className={`font-extralight text-base ${corTexto}`}>
                         {formatCurrency(Number(charge.valor))}
                       </p>
                     </div>

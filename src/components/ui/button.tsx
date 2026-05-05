@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }
@@ -13,11 +13,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: 'bg-accent text-black hover:bg-accent/90',
-      secondary: 'bg-gray-100 text-black hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700',
+      primary: 'bg-accent text-black hover:bg-accent/90 hover:shadow-glow active:scale-[0.98]',
+      secondary: 'bg-slate-800 text-white hover:bg-slate-700',
+      outline: 'border border-slate-700 text-white hover:bg-slate-800 hover:border-accent/50',
+      ghost: 'text-slate-400 hover:bg-slate-800 hover:text-white',
       danger: 'bg-danger text-white hover:bg-danger/90',
-      ghost: 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400',
-      outline: 'border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900',
     };
 
     const sizes = {
@@ -30,10 +30,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200',
-          'focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2',
-          'disabled:opacity-50 disabled:cursor-not-allowed',
-          'active:scale-[0.98]',
+          'inline-flex items-center justify-center font-light rounded-xl transition-all duration-200',
+          'focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 focus:ring-offset-black',
+          'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
           variants[variant],
           sizes[size],
           className

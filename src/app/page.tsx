@@ -1,531 +1,432 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
-  ArrowRight, 
-  CheckCircle, 
-  BarChart3, 
-  TrendingDown, 
-  Clock, 
-  Zap, 
-  Shield,
-  Users,
-  MessageCircle,
-  Download,
-  ChevronDown,
-  Star,
-  MessageSquare,
-  Mail,
-  LayoutDashboard,
-  FolderKanban,
-  Target,
-  PieChart
+  ArrowRight, Check, BarChart3, Users, Calendar, Receipt, TrendingDown, Shield, Clock, Star, Zap, ChevronDown, Mail, X, Menu, AlertCircle,
+  Target, DollarSign, Wallet, PieChart, FileText, Bell, Lock, CreditCard, Smartphone, Globe, Award, ThumbsUp, ArrowUpRight, ArrowDownRight,
+  MessageCircle, TrendingUp, Download, CalendarCheck, Send, RefreshCw, BarChart, Gauge, LockKeyhole
 } from 'lucide-react';
-
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
+
+const fadeIn = { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } };
+const stagger = { animate: { transition: { staggerChildren: 0.08 } } };
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<{ id: string } | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
   const supabase = createClient();
 
   useEffect(() => {
     setMounted(true);
-    async function checkUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    }
-    checkUser();
-    
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const features = [
-    {
-      icon: LayoutDashboard,
-      title: 'Dashboard Inteligente',
-      description: 'Visão geral completa do seu negócio. Faturamento, métricas e projeções em tempo real.',
+    { icon: BarChart3, title: 'Dashboard Inteligente', description: 'Visão geral completa do seu negócio com métricas, gráficos e indicadores financeiros atualizados.', stats: 'Métricas do negócio' },
+    { icon: Users, title: 'Gestão de Clientes', description: 'Cadastro completo com histórico de pagamentos. Score (0-100) calculado automaticamente com base no comportamento de pagamento.', stats: 'Score automático' },
+    { icon: Receipt, title: 'Cobranças Flexíveis', description: 'Crie cobranças avulsas ou configure cobranças recorrentes. Acompanhe quem pagou e quem está devendo.', stats: 'Controle total' },
+    { icon: Calendar, title: 'Calendário Financeiro', description: 'Visualize todas as datas de vencimento em um calendário interativo. Nunca mais perca um prazo.', stats: 'Visual' },
+    { icon: TrendingDown, title: 'Ranking de Inadimplência', description: 'Identifique rapidamente seus clientes com maior e menor Score. Organize cobranças por prioridade.', stats: 'Automático' },
+    { icon: Shield, title: 'Segurança e LGPD', description: 'Seus dados protegidos com criptografia. Conformidade total com a LGPD brasileira.', stats: 'LGPD' },
+    { icon: Smartphone, title: 'Acesso Mobile', description: 'Acesse pelo navegador em qualquer dispositivo. Interface responsiva que funciona em celulares e tablets.', stats: 'Navegador' },
+    { icon: FileText, title: 'Exportação de Dados', description: 'Exporte seus clientes e cobranças para planilhas CSV. Faça backup dos seus dados quando precisar.', stats: 'CSV' },
+  ];
+
+  const benefits = [
+    { title: 'Menos inadimplência', description: 'Com o Score automático você sabe quem são seus melhores e piores pagadores. Foque sua energia onde importa.', icon: TrendingDown },
+    { title: 'Tempo economizado', description: 'Organize tudo em um só lugar. visualize quem deve, quanto deve e quando venceu.', icon: Clock },
+    { title: 'Decisões informadas', description: 'Dashboard com métricas reais do seu negócio para você tomar melhores decisões.', icon: BarChart3 },
+    { title: 'Zero complexidade', description: 'Interface simples e intuitiva. Comece a usar em menos de 5 minutos.', icon: Target },
+  ];
+
+  const testimonials = [
+    { name: 'Marcos Silva', role: 'Eletricista', company: 'Autônomo', text: 'Agora consigo acompanhar todas as minhas cobranças sem perder nenhum cliente de vista. O Score me ajuda a saber quem posso confiar.', rating: 5, image: 'MS' },
+    { name: 'Juliana Costa', role: 'Cabeleireira', company: 'Studio Beleza', text: 'Simples e prático. Em 5 minutos já estava cadastrando meus clientes e criando cobranças. O melhor investimento que fiz.', rating: 5, image: 'JC' },
+  ];
+
+  const plans = [
+    { 
+      name: 'Gratuito', 
+      price: 'R$ 0', 
+      period: 'para sempre', 
+      description: 'Ideal para testar a plataforma e profissionais autônomos que estão começando',
+      features: [
+        '3 clientes',
+        '10 cobranças',
+        'Dashboard inteligente',
+        'Score de clientes',
+        'Ranking de inadimplência',
+        'Calendário financeiro',
+        'Suporte por email',
+        'Cobranças recorrentes',
+        'Pagamento parcial',
+      ], 
+      cta: 'Começar Grátis', 
+      popular: false 
     },
-    {
-      icon: Users,
-      title: 'Gestão de Clientes',
-      description: 'Cadastro completo com histórico, dados de contato e score de confiabilidade.',
-    },
-    {
-      icon: FolderKanban,
-      title: 'Cobranças Flexíveis',
-      description: 'Crie cobranças avulsas ou configure recorrências automáticas. Escolha o melhor modelo para cada cliente.',
-    },
-    {
-      icon: Clock,
-      title: 'Calendário Financeiro',
-      description: 'Visualize todas as datas de vencimento em um calendário. Nunca perca um prazo.',
-    },
-    {
-      icon: TrendingDown,
-      title: 'Ranking de Clientes',
-      description: 'Identifique quem são seus melhores clientes e quem precisa de atenção especial.',
-    },
-    {
-      icon: PieChart,
-      title: 'Relatórios (Pro)',
-      description: 'Gráficos detalhados, projeções e exportação para planilhas. Exclusivo Pro.',
+    { 
+      name: 'Pro', 
+      price: 'R$ 49,90', 
+      period: '/mês', 
+      description: 'Para profissionais e empresas que precisam de mais recursos',
+      features: [
+        'Clientes ilimitados',
+        'Cobranças ilimitadas',
+        'Cobrança via WhatsApp',
+        'Relatórios completos',
+        'Exportação CSV',
+        'Suporte prioritário',
+      ], 
+      cta: 'Assinar Agora', 
+      popular: true, 
+      annualPrice: 'R$ 499/ano',
+      annualDiscount: '17% OFF' 
     },
   ];
 
-  // const stats = [
-  //   { value: '30%', label: 'Reducao de inadimplencia' },
-  //   { value: 'R$ 10M+', label: 'Recuperados por clientes' },
-  //   { value: '2.500+', label: 'Usuarios ativos' },
-  // ];
+  const faqs = [
+    { q: 'Como funciona o plano gratuito?', a: 'O plano gratuito permite até 3 clientes e 10 cobranças por mês. Ideal para testar a plataforma e profissionais autônomos que estão começando.' },
+    { q: 'Posso mudar de plano a qualquer momento?', a: 'Sim! Você pode fazer upgrade ou downgrade quando quiser. As mudanças são aplicadas na próxima cobrança, sem multas ou taxas extras.' },
+    { q: 'Meus dados estão seguros com a LGPD?', a: 'Com certeza! Somos 100% compliant com a LGPD. Seus dados são criptografados, nunca são compartilhados e você pode solicitar a exclusão a qualquer momento.' },
+    { q: 'Posso exportar meus dados?', a: 'Sim! No plano Pro você pode exportar todos os seus clientes e cobranças para CSV. Faça backup sempre que precisar.' },
+    { q: 'O sistema funciona no celular?', a: 'Acesse pelo navegador em qualquer dispositivo. O sistema é responsivo e funciona perfeitamente em celulares e tablets.' },
+    { q: 'Como funciona o Score de clientes?', a: 'Nosso algoritmo analisa o histórico de pagamentos de cada cliente e atribui uma nota de 0-100. Quanto maior, mais confiável. Score acima de 70 é considerado bom pagador.' },
+    { q: 'Posso cancelar quando quiser?', a: 'Sim, sem multas ou taxas de cancelamento. É só cancelar nas configurações da sua conta e continuamos amigos.' },
+    { q: 'Tenho garantia de reembolso?', a: 'Sim! Você tem 7 dias após a primeira compra para solicitar reembolso total. É só ir em Configurações > Plano e solicitar. Sem perguntas, sem burocracia.' },
+    { q: 'Como funciona a cobrança via WhatsApp?', a: 'No plano Pro, o sistema gera uma mensagem pronta com os dados da cobrança que você pode copiar e enviar direto pelo WhatsApp do cliente.' },
+    { q: 'O que são cobranças recorrentes?', a: 'São cobranças que se repetem automaticamente. Você configura semanal ou mensal e o sistema cria as novas cobranças após cada vencimento. Ideal para assinaturas.' },
+    { q: 'Preciso de internet para usar?', a: 'Sim, o VenceJa é uma ferramenta online accesseda pelo navegador. Para cobrar via WhatsApp, você precisa ter internet no momento do envio.' },
+  ];
 
-  const testimonials = [
-    {
-      name: 'Carlos Silva',
-      role: 'Diretor Comercial',
-      company: 'AutoPeças Rapid',
-      text: 'Agora tenho tudo em um só lugar. Clientes, cobranças, relatórios - minha gestão mudou completamente.',
-    },
-    {
-      name: 'Juliana Martins',
-      role: 'Proprietária',
-      company: 'Studio Yoga',
-      text: 'O fluxo de caixa melhorou 100%. Sei exatamente como meu negócio está a qualquer momento.',
-    },
+  const howItWorks = [
+    { step: '01', title: 'Cadastre seus clientes', desc: 'Adicione nome, email e telefone. O Score é calculado automaticamente baseado no histórico de pagamentos.', icon: Users },
+    { step: '02', title: 'Crie cobranças', desc: 'Defina valor, data de vencimento e descrição. No plano Pro, gere a mensagem para enviar pelo WhatsApp.', icon: Receipt },
+    { step: '03', title: 'Acompanhe tudo', desc: 'Dashboard com métricas e gráficos do seu negócio. Veja quem pagou e quem está devendo.', icon: BarChart3 },
+  ];
+
+  const trustItems = [
+    { icon: Shield, label: 'Dados protegidos pela LGPD' },
+    { icon: Clock, label: 'Ativação imediata' },
+    { icon: AlertCircle, label: 'Sem taxa de setup' },
+    { icon: ArrowRight, label: 'Cancele quando quiser' },
+    { icon: Check, label: '7 dias de garantia' },
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white font-sora overflow-x-hidden">
-      {/* Background Effects */}
-      <div className="fixed inset-0 bg-grid pointer-events-none" />
-      <div className="fixed inset-0 hero-glow opacity-50" style={{ top: '-20%', left: '50%', transform: 'translateX(-50%)' }} />
+    <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
+      <div className="fixed inset-0 bg-grid pointer-events-none opacity-30" />
+      <div className="fixed inset-0 hero-glow opacity-50" style={{ top: '-30%', left: '50%', transform: 'translateX(-50%)' }} />
       
-      {/* Navigation */}
-      <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'glass py-3 shadow-xl' : 'bg-transparent py-5'
-        }`}
-      >
+      <motion.div animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }} transition={{ duration: 8, repeat: Infinity }} className="fixed top-1/4 left-10 w-72 h-72 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+      <motion.div animate={{ y: [0, 30, 0], rotate: [0, -5, 0] }} transition={{ duration: 10, repeat: Infinity }} className="fixed bottom-1/4 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'py-3 shadow-2xl backdrop-blur-2xl bg-black/95 border-b border-white/10' : 'py-5 backdrop-blur-lg bg-black/60'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
-              <Image 
-                src="/logo.png" 
-                alt="VenceJa" 
-                width={40} 
-                height={40}
-                className="w-10 h-10 rounded-xl object-contain bg-black"
-              />
-              <span className="text-xl font-bold tracking-tight">VenceJa</span>
+              <div className="relative">
+                <Image src="/logo.png" alt="VenceJa" width={36} height={36} className="w-9 h-9 rounded-xl object-contain" />
+                <div className="absolute -inset-1 bg-accent/30 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <span className="text-xl font-light tracking-wide">VenceJa</span>
             </Link>
-            
-            <div className="flex items-center gap-6">
-              <div className="hidden sm:flex items-center gap-6">
-                <Link href="#features" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-accent transition-colors">
-                  Funcionalidades
-                </Link>
-                <Link href="#pricing" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-accent transition-colors">
-                  Preços
-                </Link>
-              </div>
-              <div className="hidden md:flex items-center gap-4">
-                {user ? (
-                  <Link href="/dashboard">
-                    <button className="px-5 py-2.5 bg-accent text-black font-semibold rounded-xl text-sm flex items-center gap-2">
-                      <LayoutDashboard className="w-4 h-4" />
-                      Dashboard
-                    </button>
-                  </Link>
-                ) : (
-                  <>
-                    <Link href="/login" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-accent transition-colors">
-                      Entrar
-                    </Link>
-                    <Link href="/register">
-                      <button className="px-5 py-2.5 bg-accent text-black font-semibold rounded-xl text-sm">
-                        Registrar-se
-                      </button>
-                    </Link>
-                  </>
-                )}
-              </div>
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#features" className="text-sm font-light text-slate-400 hover:text-accent transition-colors">Funcionalidades</a>
+              <a href="#como-funciona" className="text-sm font-light text-slate-400 hover:text-accent transition-colors">Como Funciona</a>
+              <a href="#depoimentos" className="text-sm font-light text-slate-400 hover:text-accent transition-colors">Depoimentos</a>
+              <a href="#precos" className="text-sm font-light text-slate-400 hover:text-accent transition-colors">Planos</a>
+              <a href="#faq" className="text-sm font-light text-slate-400 hover:text-accent transition-colors">FAQ</a>
             </div>
+            <div className="hidden md:flex items-center gap-3">
+              {user ? (
+                <Link href="/dashboard"><Button className="bg-accent text-black"><BarChart3 className="w-4 h-4 mr-2" />Dashboard</Button></Link>
+              ) : (
+                <>
+                  <Link href="/login" className="text-sm font-light text-slate-400 hover:text-accent">Entrar</Link>
+                  <Link href="/register"><Button className="bg-accent text-black">Começar<ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
+                </>
+              )}
+            </div>
+            <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-2 hover:bg-slate-800/50 rounded-xl glass-effect"><Menu className="w-5 h-5" /></button>
           </div>
         </div>
       </nav>
 
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm md:hidden" onClick={() => setMobileMenuOpen(false)}>
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="absolute right-0 top-0 bottom-0 w-80 bg-slate-900/95 backdrop-blur-xl p-6 border-l border-slate-800" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-end mb-8"><button onClick={() => setMobileMenuOpen(false)}><X className="w-6 h-6" /></button></div>
+            <div className="space-y-4 font-light">
+              <a href="#features" className="block text-lg py-3 text-slate-300">Funcionalidades</a>
+              <a href="#como-funciona" className="block text-lg py-3 text-slate-300">Como Funciona</a>
+              <a href="#depoimentos" className="block text-lg py-3 text-slate-300">Depoimentos</a>
+              <a href="#precos" className="block text-lg py-3 text-slate-300">Planos</a>
+              <a href="#faq" className="block text-lg py-3 text-slate-300">FAQ</a>
+              <div className="pt-6 space-y-3 border-t border-slate-800">
+                {user ? <Link href="/dashboard" className="block"><Button className="w-full bg-accent text-black">Dashboard</Button></Link> : <><Link href="/login" className="block"><Button variant="outline" className="w-full">Entrar</Button></Link><Link href="/register" className="block"><Button className="w-full bg-accent text-black">Começar Gratuitamente</Button></Link></>}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Hero Section */}
-      <section className="relative pt-28 pb-24 sm:pt-36 sm:pt-44 lg:pt-52 sm:pb-28 lg:pb-36 px-3 sm:px-6 lg:px-8">
+      <motion.section style={{ y: heroY }} className="relative pt-40 pb-28 lg:pt-56 lg:pb-36 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto relative z-10">
-            {/* Headline */}
-            <h1 className={`text-2xl sm:text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-4 sm:mb-6 opacity-0 ${mounted ? 'animate-fade-up animate-delay-100' : ''}`}>
-              <span className="block">A gestão do seu negócio</span>
-              <span className="block text-gradient">em um só lugar</span>
-            </h1>
+          <motion.div initial="initial" animate="animate" variants={stagger} className="text-center max-w-5xl mx-auto">
+            <motion.div variants={fadeIn}>
+              <Badge variant="primary" className="text-sm py-2 px-5 mb-8 ring-1 ring-accent/30"><Zap className="w-4 h-4 mr-2" />Assinaturas automáticas disponíveis</Badge>
+            </motion.div>
+            
+            <motion.h1 variants={fadeIn} className="text-5xl sm:text-6xl lg:text-7xl font-extralight tracking-tight mb-8 leading-tight">
+              A gestão do seu negócio<br />
+              <span className="text-gradient">em um só lugar</span>
+            </motion.h1>
 
-            {/* Subheadline */}
-            <p className={`text-sm sm:text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-6 sm:mb-8 opacity-0 ${mounted ? 'animate-fade-up animate-delay-200' : ''}`}>
-              Centralize clientes, cobranças e relatórios. Tenha visão completa do seu negócio 
-              e tome decisões baseadas em dados.
-            </p>
+            <motion.p variants={fadeIn} className="text-xl lg:text-2xl text-slate-400 font-light max-w-3xl mx-auto mb-10 leading-relaxed">
+              Gerencie clientes, crie cobranças e acompanhe pagamentos em um só lugar. Ideal para autônomos e pequenas empresas que querem organizar as finanças.
+            </motion.p>
 
-            {/* CTA Buttons */}
-            <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8 opacity-0 ${mounted ? 'animate-fade-up animate-delay-300' : ''}`}>
+            <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-5 justify-center items-center mb-12">
               {user ? (
                 <Link href="/dashboard">
-                  <button className="btn-primary group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-accent text-black font-semibold rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
-                    <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
-                    Acessar Dashboard
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  <Button size="lg" className="bg-accent text-black px-8 py-4 text-lg shadow-lg shadow-accent/20 hover:shadow-accent/40">
+                    <BarChart3 className="w-5 h-5 mr-2" />Acessar Dashboard<ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
                 </Link>
               ) : (
                 <>
                   <Link href="/register">
-                    <button className="btn-primary group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-accent text-black font-semibold rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
-                      Começar Gratuitamente
-                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    <Button size="lg" className="bg-accent text-black px-8 py-4 text-lg shadow-lg shadow-accent/20 hover:shadow-accent/40">
+                      Começar Gratuitamente<ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
                   </Link>
-                  <Link href="/login" className="sm:hidden text-sm font-medium text-gray-400 hover:text-white transition-colors">
-                    Já tem conta? Entrar
-                  </Link>
+                  <Link href="/login" className="text-slate-400 hover:text-white font-light">Já tem conta? Entrar</Link>
                 </>
               )}
-            </div>
+            </motion.div>
 
-            {/* Trust badges */}
-            <div className={`flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm text-gray-500 opacity-0 ${mounted ? 'animate-fade-up animate-delay-400' : ''}`}>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
-                <span>3 clientes grátis</span>
-              </div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
-                <span>Sem cartão</span>
-              </div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
-                <span>Acesso vitalício</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats */}
-          {/* <div className={`mt-10 sm:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-3xl mx-auto opacity-0 ${mounted ? 'animate-fade-up animate-delay-500' : ''}`}>
-            {stats.map((stat, i) => (
-              <div key={i} className="text-center glass-card rounded-xl sm:rounded-2xl p-4 sm:p-6">
-                <div className="text-2xl sm:text-3xl sm:text-4xl font-bold text-accent mb-1">{stat.value}</div>
-                <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{stat.label}</div>
-              </div>
-            ))}
-          </div> */}
+            <motion.div variants={fadeIn} className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-500">
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10"><Check className="w-4 h-4 text-accent" /><span className="font-light">3 clientes grátis</span></div>
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10"><Check className="w-4 h-4 text-accent" /><span className="font-light">Sem cartão de crédito</span></div>
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10"><Check className="w-4 h-4 text-accent" /><span className="font-light">Cancele quando quiser</span></div>
+            </motion.div>
+          </motion.div>
         </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="absolute bottom-4 left-1/2 -translate-x-1/2">
+          <ChevronDown className="w-6 h-6 text-slate-600 animate-bounce" />
+        </motion.div>
+      </motion.section>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 scroll-indicator opacity-0 hidden sm:block" style={{ animationDelay: '1s' }}>
-          <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
+      {/* Benefits Section - New */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent via-black/50 to-transparent">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {benefits.map((b, i) => (
+              <motion.div key={i} variants={fadeIn} className="glass-card rounded-3xl p-6 text-center hover:border-accent/30">
+                <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                  <b.icon className="w-7 h-7 text-accent" />
+                </div>
+                <h3 className="text-lg font-light mb-2 text-white">{b.title}</h3>
+                <p className="text-slate-400 font-light text-sm">{b.description}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-12 sm:py-20 lg:py-32 px-3 sm:px-6 lg:px-8 relative">
+      <section id="features" className="py-24 lg:py-36 px-4 sm:px-6 lg:px-8 bg-black/30">
         <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-10 sm:mb-16 lg:mb-24">
-            <h2 className="text-2xl sm:text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-3 sm:mb-4">
-              Tudo que você precisa
-            </h2>
-            <p className="text-sm sm:text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto px-4">
-              Uma plataforma completa para gerenciar clientes, cobranças e o financeiro do seu negócio.
-            </p>
-          </div>
+          <motion.div initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger} className="text-center mb-20">
+            <motion.div variants={fadeIn} className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent/10 rounded-full text-accent text-sm font-light mb-6 backdrop-blur-sm">
+              <Star className="w-4 h-4" />Funcionalidades
+            </motion.div>
+            <motion.h2 variants={fadeIn} className="text-4xl sm:text-5xl font-extralight mb-6">Tudo que você precisa</motion.h2>
+            <motion.p variants={fadeIn} className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Uma plataforma completa para gerenciar clientes, cobranças e o financeiro do seu negócio.</motion.p>
+          </motion.div>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {features.map((feature, i) => (
-              <div 
-                key={i}
-                className="group glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 feature-card-hover cursor-pointer"
-              >
-                <div className="feature-icon w-11 h-11 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl sm:rounded-2xl bg-gray-100 dark:bg-gray-900 flex items-center justify-center mb-4 sm:mb-6 transition-all duration-300">
-                  <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-gray-600 dark:text-gray-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((f, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} 
+                className="group glass-card backdrop-blur-xl rounded-3xl p-6 hover:-translate-y-2 hover:border-accent/30 hover:bg-white/[0.08]">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                  <f.icon className="w-7 h-7 text-accent" />
                 </div>
-                <h3 className="text-base sm:text-lg lg:text-xl font-bold mb-2 sm:mb-3">{feature.title}</h3>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {feature.description}
-                </p>
-                <div className="mt-3 sm:mt-4 flex items-center gap-2 text-accent opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs sm:text-sm font-medium">Saiba mais</span>
-                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                </div>
-              </div>
+                <h3 className="text-lg font-light mb-2">{f.title}</h3>
+                <p className="text-slate-400 font-light text-sm mb-4">{f.description}</p>
+                <Badge variant="primary" className="text-xs backdrop-blur-md">{f.stats}</Badge>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Problem Section */}
-      <section className="py-12 sm:py-20 lg:py-32 px-3 sm:px-6 lg:px-8 bg-gray-50 dark:bg-black/50">
+      {/* How it Works */}
+      <section id="como-funciona" className="py-24 lg:py-36 px-4 sm:px-6 lg:px-8 bg-black/30">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center">
-            {/* Left - Problem */}
-            <div>
-              <h2 className="text-2xl sm:text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-                Tudo disperso?
-                <span className="block text-gradient">Chega de planilhas.</span>
-              </h2>
-              <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-400 mb-6 sm:mb-8">
-                Você trabalha duro para fazer seu negócio crescer, mas sem os instrumentos certos, 
-                tudo fica disperso. Clientes em uma planilha, cobranças em outra, relatórios manuais...
-                Chega de perder tempo e visão do todo.
-              </p>
-              
-              <div className="space-y-3 sm:space-y-4">
-                {[
-                  { icon: Users, title: 'Dados Desconectados', desc: 'Informações separadas em múltiplos locais.' },
-                  { icon: Clock, title: 'Perda de Tempo', desc: 'Tarefas manuais que consomem horas.' },
-                  { icon: TrendingDown, title: 'Falta de Visão', desc: 'Não sabe como seu negócio está realmente.' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl dark:hover:bg-white/5 transition-colors">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-danger/10 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-danger" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">{item.title}</h4>
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full text-primary text-sm font-light mb-6 backdrop-blur-sm">
+              <Target className="w-4 h-4" />Simples
             </div>
+            <h2 className="text-4xl sm:text-5xl font-extralight mb-6">Como funciona</h2>
+            <p className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Em 3 passos você começa a gerenciar:</p>
+          </div>
 
-            {/* Right - Solution */}
-            <div className="relative">
-              <div className="glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-accent/20 rounded-full blur-2xl sm:blur-3xl" />
-                
-                <div className="relative z-10 space-y-4 sm:space-y-6">
-                  <div className="flex items-center justify-between p-3 sm:p-4 bg-black rounded-xl sm:rounded-2xl">
-                    <span className="text-xs sm:text-sm font-medium">Faturamento do Mês</span>
-                    <span className="text-lg sm:text-2xl font-bold">R$ 47.850</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 sm:p-4 bg-accent/10 rounded-xl sm:rounded-2xl border border-accent/20">
-                    <span className="text-xs sm:text-sm font-medium text-accent">Clientes Ativos</span>
-                    <span className="text-lg sm:text-2xl font-bold text-accent">128</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 sm:p-4 bg-yellow-500/10 rounded-xl sm:rounded-2xl border border-yellow-500/20">
-                    <span className="text-xs sm:text-sm font-medium text-yellow-600">A Receber</span>
-                    <span className="text-lg sm:text-2xl font-bold text-yellow-600">R$ 12.340</span>
-                  </div>
-
-                  <div className="pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs sm:text-sm text-gray-500">Evolução vs Mês Anterior</span>
-                      <span className="text-base sm:text-lg font-bold text-accent">+23%</span>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {howItWorks.map((item, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.2 }}
+                className="relative glass-card backdrop-blur-xl rounded-3xl p-8 text-center hover:border-accent/30 hover:bg-white/[0.08]">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-accent flex items-center justify-center text-xl font-light shadow-lg shadow-accent/30">{item.step}</div>
+                <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6 mt-2">
+                  <item.icon className="w-8 h-8 text-accent" />
                 </div>
-              </div>
-
-              {/* Floating elements */}
-              <div className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 w-14 h-14 sm:w-20 sm:h-20 glass rounded-xl sm:rounded-2xl flex items-center justify-center animate-float">
-                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-accent" />
-              </div>
-            </div>
+                <h3 className="text-xl font-light mb-3">{item.title}</h3>
+                <p className="text-slate-400 font-light">{item.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="py-12 sm:py-20 lg:py-32 px-3 sm:px-6 lg:px-8">
+      <section id="depoimentos" className="py-24 lg:py-36 px-4 sm:px-6 lg:px-8 bg-black/30">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-              O que dizem nossos clientes
-            </h2>
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-warning/10 rounded-full text-warning text-sm font-light mb-6 backdrop-blur-sm">
+              <ThumbsUp className="w-4 h-4" />Depoimentos
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-extralight mb-6">O que dizem nossos clientes</h2>
+            <p className="text-xl text-slate-400 font-light">Profissionais que transformaram a gestão do seu negócio</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-4xl mx-auto">
-            {testimonials.map((testimonial, i) => (
-              <div key={i} className="glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 hover-lift">
-                <div className="flex gap-1 mb-3 sm:mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 sm:w-5 sm:h-5 fill-accent text-accent" />
-                  ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {testimonials.map((t, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="glass-card backdrop-blur-xl rounded-3xl p-8 hover:-translate-y-1 hover:border-accent/20 hover:bg-white/[0.06]">
+                <div className="flex gap-1 mb-4">{[...Array(t.rating)].map((_, j) => <Star key={j} className="w-5 h-5 fill-warning text-warning" />)}</div>
+                <p className="text-lg text-slate-200 font-light mb-6 leading-relaxed">"{t.text}"</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-black font-light text-lg">{t.image}</div>
+                  <div><div className="font-light">{t.name}</div><div className="text-sm text-slate-500">{t.role} · {t.company}</div></div>
                 </div>
-                <p className="text-sm sm:text-base lg:text-lg text-gray-700 dark:text-gray-300 mb-4 sm:mb-6 leading-relaxed">
-                  &ldquo;{testimonial.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center">
-                    <span className="text-black font-bold text-sm sm:text-lg">{testimonial.name[0]}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="precos" className="py-24 lg:py-36 px-4 sm:px-6 lg:px-8 bg-black/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent/10 rounded-full text-accent text-sm font-light mb-6 backdrop-blur-sm">
+              <CreditCard className="w-4 h-4" />Planos
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-extralight mb-6">Simple e acessível</h2>
+            <p className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Escolha o plano ideal para o seu negócio. Sem letras pequenas.</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {plans.map((plan, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className={`glass-card backdrop-blur-xl rounded-3xl p-8 ${plan.popular ? 'border-2 border-accent lg:scale-105' : 'border-white/[0.08]'}`}>
+                {plan.popular && <div className="mb-4"><Badge variant="primary" className="px-4 py-1 backdrop-blur-md"><Star className="w-4 h-4 mr-1" />Mais Popular</Badge></div>}
+                <h3 className="text-2xl font-light mb-2">{plan.name}</h3>
+                <p className="text-slate-400 font-light mb-4">{plan.description}</p>
+                <div className="mb-4"><span className="text-5xl font-extralight">{plan.price}</span><span className="text-slate-500 ml-2">{plan.period}</span></div>
+                {plan.annualPrice && (
+                  <div className="flex items-center gap-3 mb-6">
+                    <Badge variant="primary" className="backdrop-blur-md">{plan.annualDiscount}</Badge>
+                    <span className="text-slate-400 font-light">{plan.annualPrice}</span>
                   </div>
-                  <div>
-                    <div className="font-semibold text-sm sm:text-base">{testimonial.name}</div>
-                    <div className="text-xs sm:text-sm text-gray-500">{testimonial.role} · {testimonial.company}</div>
-                  </div>
-                </div>
+                )}
+                <ul className="space-y-3 mb-8">{plan.features.map((f, j) => <li key={j} className="flex items-center gap-3"><Check className="w-5 h-5 text-accent" /><span className="text-slate-300 font-light">{f}</span></li>)}</ul>
+                <Link href="/register" className="block"><Button variant={plan.popular ? 'primary' : 'outline'} size="lg" className={`w-full ${plan.popular ? 'bg-accent text-black' : ''}`}>{plan.cta}</Button></Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+            {trustItems.map((item, i) => (
+              <div key={i} className="trust-badge backdrop-blur-md border border-white/10">
+                <item.icon className="w-4 h-4 text-accent" /><span className="font-light">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-12 sm:py-20 lg:py-32 px-3 sm:px-6 lg:px-8 bg-gray-50 dark:bg-black/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
-              Simples e acessível
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-400">
-              Escolha o plano ideal para o seu negócio
-            </p>
+      {/* FAQ */}
+      <section id="faq" className="py-24 lg:py-36 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-800/50 rounded-full text-slate-300 text-sm font-light mb-6 backdrop-blur-sm">
+              <Bell className="w-4 h-4" />FAQ
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-extralight mb-6">Perguntas Frequentes</h2>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
-            {/* Free Plan */}
-            <div className="pricing-card glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 hover-lift">
-              <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Gratuito</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 text-sm">Para quem está começando</p>
-              
-              <div className="mb-4 sm:mb-6">
-                <span className="text-3xl sm:text-4xl font-bold">R$ 0</span>
-                <span className="text-gray-500 ml-2 text-sm">para sempre</span>
-              </div>
-
-              <ul className="space-y-2 sm:space-y-4 mb-6 sm:mb-8">
-                {['3 clientes', '10 cobranças', 'Ranking de clientes', 'Dashboard inteligente', 'Score de clientes', 'Suporte por Email'].map((item, i) => (
-                  <li key={i} className="flex items-center gap-2 sm:gap-3">
-                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link href="/register" className="block">
-                <button className="w-full py-3 sm:py-4 border border-gray-200 dark:border-gray-700 hover:border-accent hover:bg-accent/5 font-semibold rounded-xl sm:rounded-2xl transition-all text-sm sm:text-base">
-                  Começar Grátis
-                </button>
-              </Link>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="pricing-card featured glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-accent/20 rounded-full blur-2xl sm:blur-3xl" />
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-accent/20 rounded-full text-accent text-xs sm:text-sm font-medium mb-3 sm:mb-4">
-                  <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-accent" />
-                  Mais Popular
-                </div>
-                
-                <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Vitalício Pro</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 text-sm">Acesso permanente a todas as funcionalidades</p>
-                
-                <div className="mb-4 sm:mb-6">
-                  <span className="text-4xl sm:text-5xl font-bold">R$ 297</span>
-                  <span className="text-gray-500 ml-2 text-sm">pagamento único</span>
-                </div>
-
-                <div className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-accent/10 rounded-lg sm:rounded-xl text-accent text-xs sm:text-sm font-medium mb-4 sm:mb-6">
-                  Economize R$ 598/ano vs assinatura
-                </div>
-
-                <ul className="space-y-2 sm:space-y-4 mb-6 sm:mb-8">
-                  {['Tudo do plano Gratuito', 'Clientes ilimitados', 'Cobranças ilimitadas', 'Cobrança via WhatsApp', 'Cobranças recorrentes', 'Relatórios e projeções', 'Suporte prioritário', 'Acesso vitalício - pague uma vez!'].map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link href="/register" className="block">
-                  <button className="w-full py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black font-semibold rounded-xl sm:rounded-2xl transition-all text-sm sm:text-base">
-                    Comprar Agora
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Trust badges */}
-          <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 glass rounded-lg sm:rounded-xl">
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-              <span className="text-xs sm:text-sm font-medium">Pagamento 100% seguro via PIX</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 glass rounded-lg sm:rounded-xl">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-              <span className="text-xs sm:text-sm font-medium">Ativação em até 24h</span>
-            </div>
-          </div>
+          <div className="space-y-4">{faqs.map((faq, i) => <FAQItem key={i} q={faq.q} a={faq.a} />)}</div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-12 sm:py-20 lg:py-32 px-3 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/5 to-transparent" />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-2xl sm:text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-            Organize a gestão do seu negócio
-          </h2>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-400 mb-6 sm:mb-8">
-            Junte-se a milhares de profissionais que transformaram a forma de gerenciar seu negócio com o VenceJa.
-          </p>
-          <Link href="/register">
-            <button className="btn-primary group px-6 sm:px-10 py-3 sm:py-4 lg:py-5 bg-accent text-black font-bold rounded-xl sm:rounded-2xl inline-flex items-center gap-2 sm:gap-3 text-sm sm:text-base lg:text-lg">
-              Começar Agora - É Grátis
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </Link>
+      {/* CTA Final */}
+      <section className="py-24 lg:py-36 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent via-accent/5 to-transparent">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="glass-card backdrop-blur-xl rounded-3xl p-12 lg:p-16 border border-white/10">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extralight mb-6">Organize a gestão do seu negócio</h2>
+            <p className="text-xl text-slate-400 font-light mb-8 max-w-2xl mx-auto">Comece agora mesmo. É gratuito e sem compromisso.</p>
+            <Link href="/register">
+              <Button size="lg" className="bg-accent text-black px-12 py-5 text-xl shadow-2xl shadow-accent/30 hover:shadow-accent/50">
+                Começar Agora - É Grátis<ArrowRight className="w-6 h-6 ml-2" />
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 sm:py-12 px-3 sm:px-6 lg:px-8 border-t border-gray-100 dark:border-gray-800">
+      <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-black/50">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Image
-                src="/logo.png"
-                alt="VenceJa"
-                width={40}
-                height={40}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-contain"
-              />
-              <span className="text-lg sm:text-xl font-bold">VenceJa</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            <div>
+              <div className="flex items-center gap-3 mb-4"><Image src="/logo.png" alt="VenceJa" width={32} height={32} className="w-8 h-8 rounded-lg" /><span className="text-lg font-light">VenceJa</span></div>
+              <p className="text-slate-500 font-light text-sm">Gestão empresarial simplificada para profissionais e pequenas empresas.</p>
             </div>
-            
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm text-gray-400">
-              <a 
-                href="mailto:suporte@venceja.com.br" 
-                className="flex items-center gap-1.5 sm:gap-2 hover:text-accent transition-colors"
-              >
-                <Mail className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>Fale conosco</span>
-              </a>
-              <a href="#" className="hover:text-accent transition-colors">Termos</a>
-              <a href="#" className="hover:text-accent transition-colors">Privacidade</a>
-            </div>
-            
-            <p className="text-gray-500 text-xs sm:text-sm">
-              © 2025 VenceJa. Todos os direitos reservados.
-            </p>
+            <div><h4 className="font-light mb-4">Produto</h4><div className="space-y-2 text-sm text-slate-400 font-light"><a href="#features" className="block hover:text-accent">Funcionalidades</a><a href="#precos" className="block hover:text-accent">Planos</a><a href="#faq" className="block hover:text-accent">FAQ</a></div></div>
+            <div><h4 className="font-light mb-4">Suporte</h4><div className="space-y-2 text-sm text-slate-400 font-light"><a href="mailto:suporte@venceja.com.br" className="block hover:text-accent">Email</a><a href="/help" className="block hover:text-accent">Central de ajuda</a></div></div>
+            <div><h4 className="font-light mb-4">Legal</h4><div className="space-y-2 text-sm text-slate-400 font-light"><Link href="/termos" className="block hover:text-accent">Termos de uso</Link><Link href="/privacidade" className="block hover:text-accent">Privacidade</Link></div></div>
+          </div>
+          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-slate-500 text-sm font-light">© 2025 VenceJa. Todos os direitos reservados.</p>
+            <div className="flex items-center gap-4"><a href="mailto:suporte@venceja.com.br" className="flex items-center gap-2 text-slate-400 hover:text-accent text-sm"><Mail className="w-4 h-4" />suporte@venceja.com.br</a></div>
           </div>
         </div>
       </footer>
     </div>
+  );
+}
+
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="glass-card backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-5 text-left font-light hover:bg-white/5 transition-colors">
+        <span className="text-lg">{q}</span><ChevronDown className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="px-5 pb-5"><p className="text-slate-400 font-light pt-2">{a}</p></motion.div>}
+    </motion.div>
   );
 }

@@ -51,7 +51,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       >
         {title && (
           <div className="sticky top-0 bg-white dark:bg-[#000000] flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-800">
-            <h2 className="text-base sm:text-lg font-semibold">
+            <h2 className="text-base sm:text-lg font-light">
               {title}
             </h2>
             <button

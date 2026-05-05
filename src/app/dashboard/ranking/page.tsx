@@ -88,14 +88,14 @@ export default function RankingPage() {
     loadData();
   }, [mounted]);
 
-  if (isLoading || !data) return <div className="space-y-6"><h1 className="text-2xl font-bold">Ranking de Inadimplencia</h1><DashboardSkeleton /></div>;
+  if (isLoading || !data) return <div className="space-y-6"><h1 className="text-2xl font-extralight">Ranking de Inadimplencia</h1><DashboardSkeleton /></div>;
 
   const { ranking, totalAtrasadoGeral, totalChargesAtrasadas, avgDiasAtraso } = data;
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className={`opacity-0 ${mounted ? 'animate-fade-up' : ''}`}>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Ranking de Inadimplência</h1>
+        <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight">Ranking de Inadimplência</h1>
         <p className="text-gray-400 mt-1 text-sm sm:text-base">Análise detalhada dos clientes devedores</p>
       </div>
 
@@ -103,25 +103,25 @@ export default function RankingPage() {
         <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border-l-2 sm:border-l-4 border-l-danger">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-danger/10 rounded-lg sm:rounded-xl flex items-center justify-center"><DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-danger" /></div>
-            <div className="min-w-0"><p className="text-gray-400 text-[10px] sm:text-xs">Total em Atraso</p><p className="text-lg sm:text-xl font-bold text-danger truncate">{formatCurrency(totalAtrasadoGeral)}</p></div>
+            <div className="min-w-0"><p className="text-gray-400 text-[10px] sm:text-xs">Total em Atraso</p><p className="text-lg sm:text-xl font-extralight text-danger truncate">{formatCurrency(totalAtrasadoGeral)}</p></div>
           </div>
         </div>
         <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border-l-2 sm:border-l-4 border-l-yellow-500">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/10 rounded-lg sm:rounded-xl flex items-center justify-center"><AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" /></div>
-            <div><p className="text-gray-400 text-[10px] sm:text-xs">Cobranças</p><p className="text-lg sm:text-xl font-bold">{totalChargesAtrasadas}</p></div>
+            <div><p className="text-gray-400 text-[10px] sm:text-xs">Cobranças</p><p className="text-lg sm:text-xl font-extralight">{totalChargesAtrasadas}</p></div>
           </div>
         </div>
         <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border-l-2 sm:border-l-4 border-l-orange-500">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500/10 rounded-lg sm:rounded-xl flex items-center justify-center"><Clock className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" /></div>
-            <div><p className="text-gray-400 text-[10px] sm:text-xs">Média</p><p className="text-lg sm:text-xl font-bold">{avgDiasAtraso}d</p></div>
+            <div><p className="text-gray-400 text-[10px] sm:text-xs">Média</p><p className="text-lg sm:text-xl font-extralight">{avgDiasAtraso}d</p></div>
           </div>
         </div>
         <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 border-l-2 sm:border-l-4 border-l-red-500">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/10 rounded-lg sm:rounded-xl flex items-center justify-center"><Users className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" /></div>
-            <div><p className="text-gray-400 text-[10px] sm:text-xs">Inadimpl.</p><p className="text-lg sm:text-xl font-bold">{ranking.length}</p></div>
+            <div><p className="text-gray-400 text-[10px] sm:text-xs">Inadimpl.</p><p className="text-lg sm:text-xl font-extralight">{ranking.length}</p></div>
           </div>
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function RankingPage() {
       {ranking.length === 0 ? (
         <div className="glass-card rounded-3xl py-16 text-center">
           <div className="w-20 h-20 bg-gradient-to-br from-accent/20 to-accent/10 rounded-3xl flex items-center justify-center mx-auto mb-4"><Sparkles className="w-10 h-10 text-accent" /></div>
-          <h3 className="text-xl font-semibold mb-2">Nenhum cliente em atraso!</h3>
+          <h3 className="text-xl font-light mb-2">Nenhum cliente em atraso!</h3>
           <p className="text-gray-400">Continue mantendo suas cobranças em dia</p>
         </div>
       ) : (
@@ -140,15 +140,15 @@ export default function RankingPage() {
               <div key={item.client.id} className={`glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 hover-lift cursor-pointer opacity-0 ${mounted ? 'animate-fade-up' : ''}`} style={{ animationDelay: `${(index + 3) * 50}ms` }}>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center font-bold ${index === 0 ? 'bg-yellow-500/20 text-yellow-500' : index === 1 ? 'bg-gray-400/20 text-gray-400' : index === 2 ? 'bg-orange-600/20 text-orange-600' : 'bg-gray-800 text-gray-500'}`}>{index + 1}</div>
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center"><span className="text-sm sm:text-lg font-bold">{item.client.nome.charAt(0).toUpperCase()}</span></div>
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center font-extralight ${index === 0 ? 'bg-yellow-500/20 text-yellow-500' : index === 1 ? 'bg-gray-400/20 text-gray-400' : index === 2 ? 'bg-orange-600/20 text-orange-600' : 'bg-gray-800 text-gray-500'}`}>{index + 1}</div>
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center"><span className="text-sm sm:text-lg font-extralight">{item.client.nome.charAt(0).toUpperCase()}</span></div>
                     <div className="min-w-0 flex-1 sm:flex-none">
-                      <p className="font-semibold text-sm sm:text-base truncate">{item.client.nome}</p>
+                      <p className="font-light text-sm sm:text-base truncate">{item.client.nome}</p>
                       <p className="text-xs text-gray-400">{item.quantidadeAtrasos} cobrança{item.quantidadeAtrasos > 1 ? 's' : ''} • {item.mediaDiasAtraso}d méd.</p>
                     </div>
                   </div>
                   <div className="text-right w-full sm:w-auto sm:ml-4">
-                    <p className="text-lg sm:text-xl font-bold text-danger">{formatCurrency(item.totalAtrasado)}</p>
+                    <p className="text-lg sm:text-xl font-extralight text-danger">{formatCurrency(item.totalAtrasado)}</p>
                     <div className="w-full sm:w-24 h-1.5 sm:h-2 bg-gray-800 rounded-full mt-1 sm:mt-2 overflow-hidden">
                       <div className="h-full bg-danger rounded-full" style={{ width: `${percentage}%` }} />
                     </div>

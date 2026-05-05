@@ -78,12 +78,12 @@ export default function ForgotPasswordPage() {
               height={48}
               className="w-12 h-12 rounded-xl object-contain bg-black"
             />
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">VenceJa</span>
+            <span className="text-2xl font-extralight text-gray-900 dark:text-white">VenceJa</span>
           </Link>
           <div className="w-16 h-16 bg-success-100 dark:bg-success-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-success-600 dark:text-success-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Email enviado!</h1>
+          <h1 className="text-2xl font-extralight text-gray-900 dark:text-white mb-2">Email enviado!</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
             Enviamos instruções para <strong>{email}</strong>.
             <br />
@@ -117,9 +117,9 @@ export default function ForgotPasswordPage() {
               height={48}
               className="w-12 h-12 rounded-xl object-contain bg-black"
             />
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">VenceJa</span>
+            <span className="text-2xl font-extralight text-gray-900 dark:text-white">VenceJa</span>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Esqueceu a senha?</h1>
+          <h1 className="text-2xl font-extralight text-gray-900 dark:text-white">Esqueceu a senha?</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Digite seu email para receber instruções de recuperação.
           </p>
@@ -149,7 +149,7 @@ export default function ForgotPasswordPage() {
 
         <p className="text-center text-sm text-gray-600 dark:text-gray-400">
           Lembrou a senha?{' '}
-          <Link href="/login" className="text-primary font-medium hover:underline">
+          <Link href="/login" className="text-primary font-light hover:underline">
             Voltar para Login
           </Link>
         </p>

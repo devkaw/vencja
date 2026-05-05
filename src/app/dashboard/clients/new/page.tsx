@@ -115,12 +115,12 @@ export default function NewClientPage() {
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Novo Cliente</h1>
+          <h1 className="text-2xl font-extralight">Novo Cliente</h1>
         </div>
         
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-bold mb-2">Limite atingido</h2>
+            <h2 className="text-xl font-extralight mb-2">Limite atingido</h2>
             <p className="text-gray-500 mb-4">
               Você atingiu o limite de 3 clientes. Faça upgrade para adicionar clientes ilimitados.
             </p>
@@ -141,7 +141,7 @@ export default function NewClientPage() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">Novo Cliente</h1>
+        <h1 className="text-2xl font-extralight">Novo Cliente</h1>
       </div>
 
       <Card>

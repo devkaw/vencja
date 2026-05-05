@@ -243,7 +243,7 @@ export default function NewChargePage() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">Nova Cobrança</h1>
+        <h1 className="text-2xl font-extralight">Nova Cobrança</h1>
       </div>
 
       <Card>
@@ -251,14 +251,14 @@ export default function NewChargePage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {errors.general && (
               <div className="p-4 bg-danger/10 border border-danger/30 rounded-lg">
-                <p className="text-danger text-sm font-medium">{errors.general}</p>
+                <p className="text-danger text-sm font-light">{errors.general}</p>
               </div>
             )}
             {!hasPremiumAccess(profile) && !errors.general && (chargeCount + (formData.quantidade_parcelas || 1)) > 10 && (
               <div className="p-4 bg-danger/10 border border-danger/30 rounded-lg">
-                <p className="text-danger text-sm font-medium">Você vai ultrapassar o limite de 10 cobranças. Reduza a quantidade de parcelas.</p>
+                <p className="text-danger text-sm font-light">Você vai ultrapassar o limite de 10 cobranças. Reduza a quantidade de parcelas.</p>
                 <Link href="/dashboard/upgrade">
-                  <span className="text-danger text-sm font-medium underline cursor-pointer">Fazer upgrade para ilimitado</span>
+                  <span className="text-danger text-sm font-light underline cursor-pointer">Fazer upgrade para ilimitado</span>
                 </Link>
               </div>
             )}
@@ -333,7 +333,7 @@ export default function NewChargePage() {
               </button>
               <div className="flex items-center gap-2">
                 <RefreshCw className={`w-4 h-4 ${formData.recorrente ? 'text-accent' : 'text-gray-500'}`} />
-                <span className={`text-sm ${formData.recorrente ? 'text-accent font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Recorrente</span>
+                <span className={`text-sm ${formData.recorrente ? 'text-accent font-light' : 'text-gray-600 dark:text-gray-400'}`}>Recorrente</span>
               </div>
             </div>
 

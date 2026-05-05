@@ -4,19 +4,19 @@ import { cn } from '@/lib/utils';
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'success' | 'danger' | 'info' | 'secondary' | 'warning';
+  variant?: 'default' | 'primary' | 'success' | 'danger' | 'warning' | 'secondary';
   size?: 'sm' | 'md';
   className?: string;
 }
 
 export function Badge({ children, variant = 'default', size = 'sm', className }: BadgeProps) {
   const variants = {
-    default: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-    success: 'bg-accent/10 text-accent',
-    danger: 'bg-danger/10 text-danger',
-    info: 'bg-accent/10 text-accent',
-    secondary: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-    warning: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-500',
+    default: 'bg-white/10 text-slate-300',
+    primary: 'bg-accent/20 text-accent',
+    success: 'bg-accent/20 text-accent',
+    danger: 'bg-danger/20 text-danger',
+    warning: 'bg-warning/20 text-warning',
+    secondary: 'bg-slate-700 text-slate-300',
   };
 
   const sizes = {
@@ -27,7 +27,7 @@ export function Badge({ children, variant = 'default', size = 'sm', className }:
   return (
     <span
       className={cn(
-        'inline-flex items-center font-medium rounded-full',
+        'inline-flex items-center font-light rounded-full',
         variants[variant],
         sizes[size],
         className

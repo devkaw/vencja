@@ -1,15 +1,21 @@
 export type Plano = 'free' | 'pro';
-export type StatusPagamento = 'pendente' | 'aprovado' | 'rejeitado';
 
 export interface Profile {
   id: string;
   email: string;
   nome?: string;
   plano: Plano;
-  acesso_vitalicio: boolean;
-  status_pagamento: StatusPagamento;
   is_admin: boolean;
   created_at: string;
+  subscription_id?: string;
+  subscription_status?: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing';
+  subscription_cycle?: 'monthly' | 'annual';
+  subscription_started_at?: string;
+  subscription_ends_at?: string;
+  cancellation_requested_at?: string;
+  cancellation_type?: 'cancel' | 'refund';
+  cancellation_reason?: string;
+  cancellation_status?: 'pending' | 'approved' | 'rejected';
 }
 
 export interface Client {
@@ -52,16 +58,6 @@ export interface Payment {
   created_at: string;
 }
 
-export interface PaymentRequest {
-  id: string;
-  user_id: string;
-  comprovante_url: string | null;
-  status: StatusPagamento;
-  created_at: string;
-  updated_at: string;
-  profile?: Profile;
-}
-
 export interface DashboardMetrics {
   faturamentoMes: number;
   faturamentoProjetado: number;
@@ -91,7 +87,3 @@ export interface Toast {
   type: ToastType;
   message: string;
 }
-
-export const PIX_KEY = '00020101021126650014br.gov.bcb.pix0111097354445770228Pagamento Vitalicio  VenceJa5204000053039865406297.005802BR5916KADU A WANDERLEY6008SALVADOR62070503***6304C7AE';
-
-export const PLAN_PRICE = 297;
