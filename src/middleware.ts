@@ -13,9 +13,17 @@ export async function middleware(request: NextRequest) {
     '/auth/callback',
     '/help',
     '/api/debug-email',
+    '/sitemap.xml',
+    '/robots.txt',
   ];
   
+  const isPublicFile = pathname === '/sitemap.xml' || pathname === '/robots.txt';
+  
   if (pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+  
+  if (isPublicFile) {
     return NextResponse.next();
   }
   
@@ -66,6 +74,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|apple-touch-icon.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|apple-touch-icon.*\\.png|.*\\.(?:svg|xml|txt|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
