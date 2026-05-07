@@ -12,8 +12,56 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: 'VenceJa - Gestão Empresarial',
-  description: 'Centralize clientes, cobranças e relatórios. Gestão completa do seu negócio.',
+  metadataBase: new URL('https://www.venceja.com.br'),
+  title: {
+    default: 'VenceJa - Gestão empresarial para autônomos e pequenas empresas',
+    template: '%s | VenceJa',
+  },
+  description: 'VenceJa: software de gestão empresarial completo. Centralize clientes, cobranças e relatórios. Ideal para autônomos e pequenas empresas. Score automático, calendário financeiro e cobrança recorrente.',
+  keywords: ['VenceJa', 'vencja', 'gestão empresarial', 'controle de cobrança', 'gestão de clientes', 'software para autônomos', 'controle financeiro', 'inadimplência', 'LGPD', 'cobrança recorrente', 'dashboard financeiro', 'relatório financeiro', 'gerenciar clientes', 'cobrar clientes', 'controle de inadimplentes', '软件', 'gestão financeira', 'fatura', 'boleto', 'pix'],
+  authors: [{ name: 'VenceJa' }],
+  creator: 'VenceJa',
+  publisher: 'VenceJa',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: 'https://www.venceja.com.br',
+    siteName: 'VenceJa',
+    title: 'VenceJa - Software de gestão empresarial para autônomos',
+    description: 'VenceJa: software de gestão empresarial completo. Centralize clientes, cobranças e relatórios. Ideal para autônomos e pequenas empresas.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'VenceJa - Gestão Empresarial',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'VenceJa - Gestão empresarial',
+    description: 'VenceJa: software de gestão empresarial completo. Centralize clientes, cobranças e relatórios.',
+    images: ['/og-image.png'],
+    creator: '@venceja',
+  },
+  alternates: {
+    canonical: 'https://www.venceja.com.br',
+    languages: {
+      'pt-BR': 'https://www.venceja.com.br',
+    },
+  },
   icons: {
     icon: '/favicon.ico',
     apple: '/icon.png',
