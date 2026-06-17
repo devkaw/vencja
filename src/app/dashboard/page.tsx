@@ -19,6 +19,11 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler);
 
+function parseDateLocal(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } };
 const stagger = { animate: { transition: { staggerChildren: 0.06 } } };
 
@@ -46,7 +51,7 @@ export default function DashboardPage() {
       const faturamentoMes = allCharges
         .filter(c => c.status === 'pago' && c.data_pagamento)
         .filter(c => {
-          const pagamento = new Date(c.data_pagamento);
+          const pagamento = parseDateLocal(c.data_pagamento);
           return pagamento.getMonth() === mesAtual && pagamento.getFullYear() === anoAtual;
         })
         .reduce((sum, c) => sum + Number(c.valor), 0);
@@ -101,13 +106,15 @@ export default function DashboardPage() {
   const mesAtual = hoje.getMonth();
   const anoAtual = hoje.getFullYear();
   
-  const cobrancasEsteMes = allCharges.filter((c: any) => {
-    const vencimento = new Date(c.data_vencimento);
-    return vencimento.getMonth() === mesAtual && vencimento.getFullYear() === anoAtual;
-  });
-  
-  const cobrancasPagasEsteMes = cobrancasEsteMes.filter((c: any) => c.status === 'pago').length;
-  const cobrancasAtrasadasEsteMes = cobrancasEsteMes.filter((c: any) => c.status === 'pendente' && isVencido(c.data_vencimento)).length;
+  const cobrancasPagasEsteMes = allCharges.filter((c: any) => {
+    if (c.status !== 'pago' || !c.data_pagamento) return false;
+    const pagamento = parseDateLocal(c.data_pagamento);
+    return pagamento.getMonth() === mesAtual && pagamento.getFullYear() === anoAtual;
+  }).length;
+
+  const cobrancasAtrasadas = allCharges.filter((c: any) => {
+    return c.status !== 'pago' && isVencido(c.data_vencimento);
+  }).length;
 
   return (
     <motion.div initial="initial" animate="animate" variants={stagger} className="space-y-6">
@@ -124,18 +131,18 @@ export default function DashboardPage() {
       </motion.div>
 
       <motion.div variants={fadeIn} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={DollarSign} title="Faturamento do Mês" value={formatCurrency(faturamentoMes)} sub={`${allCharges.filter((c: any) => c.status === 'pago' && c.data_pagamento && new Date(c.data_pagamento).getMonth() === new Date().getMonth()).length} cobranças pagas este mês`} color="accent" delay={0} />
+        <StatCard icon={DollarSign} title="Faturamento do Mês" value={formatCurrency(faturamentoMes)} sub={`${cobrancasPagasEsteMes} cobranças pagas este mês`} color="accent" delay={0} />
         <StatCard icon={TrendingUp} title="Faturamento Total" value={formatCurrency(faturamentoTotal)} sub="Total recebido" color="accent" delay={1} />
         <StatCard icon={AlertOctagon} title="Atraso Total" value={formatCurrency(atrasoTotal)} sub={`${cobrancasVencidas} cobranças vencidas`} color="danger" delay={2} />
-        <StatCard icon={Clock} title="Atraso no Mês" value={formatCurrency(atrasoNoMes)} sub="Valores vencidos neste mês" color="warning" delay={3} />
+        <StatCard icon={Clock} title="Atraso no Mês" value={formatCurrency(atrasoNoMes)} sub="Valores vencidos neste mês" color="danger" delay={3} />
       </motion.div>
 
       <motion.div variants={fadeIn} className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <QuickStat icon={Users} label="Total Clientes" value={totalClientes} delay={4} />
-        <QuickStat icon={Receipt} label="Cobranças" value={cobrancasEsteMes.length} delay={5} />
+        <QuickStat icon={Receipt} label="Cobranças" value={allCharges.length} delay={5} />
         <QuickStat icon={CheckCircle} label="Pagas no Mês" value={cobrancasPagasEsteMes} color="text-accent" delay={6} />
-        <QuickStat icon={Clock} label="A Vencer" value={cobrancasEsteMes.filter((c: any) => c.status === 'pendente' && !isVencido(c.data_vencimento)).length} color="text-warning" delay={7} />
-        <QuickStat icon={AlertTriangle} label="Atraso" value={cobrancasAtrasadasEsteMes} color="text-danger" delay={8} />
+        <QuickStat icon={Clock} label="A Vencer" value={allCharges.filter((c: any) => c.status === 'pendente' && !isVencido(c.data_vencimento)).length} color="text-warning" delay={7} />
+        <QuickStat icon={AlertTriangle} label="Atraso" value={cobrancasAtrasadas} color="text-danger" delay={8} />
       </motion.div>
 
       <div className="grid lg:grid-cols-2 gap-6">
@@ -250,7 +257,7 @@ function getChargesByMonth(charges: any[]) {
     return charges
       .filter(c => {
         if (!c.data_pagamento || c.status !== 'pago') return false;
-        const pagamento = new Date(c.data_pagamento);
+        const pagamento = parseDateLocal(c.data_pagamento);
         return pagamento.getMonth() === m.data.getMonth() && pagamento.getFullYear() === m.data.getFullYear();
       })
       .reduce((sum, c) => sum + Number(c.valor), 0);

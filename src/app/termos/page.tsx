@@ -42,7 +42,7 @@ export default function TermosPage() {
               Bem-vindo ao VenceJa! Estes Termos de Uso (&quot;Termos&quot;) regem o uso do nosso aplicativo web de gestão empresarial, disponível em www.venceja.com.br (o &quot;Serviço&quot;).
             </p>
             <p className="text-slate-600 dark:text-slate-400">
-              Ao acessar ou usar o VenceJa, você concorda em cumprir estes Termos. Se você não concordar com任何 parte destes Termos, não poderá usar nosso Serviço.
+              Ao acessar ou usar o VenceJa, você concorda em cumprir estes Termos. Se você não concordar com qualquer parte destes Termos, não poderá usar nosso Serviço.
             </p>
           </section>
 
@@ -84,7 +84,7 @@ export default function TermosPage() {
 
             <h3 className="text-lg font-light mb-2">5.2 Segurança</h3>
             <p className="text-slate-600 dark:text-slate-400 mb-4">
-              Você é responsável por manter a confidencialidade de sua senha e por todas as atividades que ocorrem em sua Conta. Você concorda em notifyarnos imediatamente sobre qualquer uso não autorizado de sua Conta.
+              Você é responsável por manter a confidencialidade de sua senha e por todas as atividades que ocorrem em sua Conta. Você concorda em nos notificar imediatamente sobre qualquer uso não autorizado de sua Conta.
             </p>
 
             <h3 className="text-lg font-light mb-2">5.3 Credenciais</h3>
@@ -132,7 +132,7 @@ export default function TermosPage() {
               Você concorda em NÃO usar o Serviço para:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-slate-600 dark:text-slate-400">
-              <li>Violar qualquer lei ouregulation aplicável</li>
+              <li>Violar qualquer lei ou regulamento aplicável</li>
               <li>Infringir direitos de terceiros</li>
               <li>Enviar spam ou mensagens indesejadas</li>
               <li>Introduzir vírus ou código malicioso</li>

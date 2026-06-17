@@ -60,6 +60,8 @@ export default function PrivacidadePage() {
             <ul className="list-disc pl-6 space-y-2 text-slate-600 dark:text-slate-400 mb-4">
               <li>Nome completo</li>
               <li>Endereço de email</li>
+              <li>Telefone</li>
+              <li>CPF</li>
               <li>Senha (armazenada de forma criptografada)</li>
             </ul>
 
@@ -71,7 +73,6 @@ export default function PrivacidadePage() {
               <li>Nome</li>
               <li>Email</li>
               <li>Telefone</li>
-              <li>Endereço</li>
               <li>Dados de cobranças e pagamentos</li>
             </ul>
 
@@ -131,7 +132,7 @@ export default function PrivacidadePage() {
               Compartilhamos seus dados apenas quando necessário:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-slate-600 dark:text-slate-400">
-              <li><strong>Processadores de pagamento</strong> - Asaas (para processamento de PIX e cartões)</li>
+              <li><strong>Processadores de pagamento</strong> - Cakto (para processamento de PIX, cartão e boleto)</li>
               <li><strong>Fornecedores de infraestrutura</strong> - Supabase (hospedagem)</li>
               <li><strong>Obrigação legal</strong> - Quando exigido por lei</li>
             </ul>

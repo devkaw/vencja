@@ -75,40 +75,59 @@ export function gerarProximoVencimento(dataVencimento: string, periodicidade: 's
 }
 
 export function calcularScore(charges: Charge[]): number {
-  const paidCharges = charges.filter(c => c.status === 'pago' && c.data_pagamento);
-  const overdueCharges = charges.filter(c => 
-    c.status !== 'pago' && 
-    (c.status === 'pendente' || c.status === 'parcial') && 
-    isVencido(c.data_vencimento)
-  );
-  
-  if (paidCharges.length === 0 && overdueCharges.length === 0) {
-    return 100;
-  }
-  
-  let total = 0;
-  let count = 0;
-  
-  paidCharges.forEach(c => {
+  if (charges.length === 0) return 80;
+
+  const pagas = charges.filter(c => c.status === 'pago' || c.status === 'parcial');
+  const pendentes = charges.filter(c => c.status === 'pendente' || c.status === 'parcial');
+  const atrasadas = charges.filter(c => c.status !== 'pago' && isVencido(c.data_vencimento));
+
+  const totalCharges = charges.length;
+  const totalPago = pagas.length;
+
+  // 1. Taxa de pagamento (0-35 pts)
+  //    Quanto maior a % de cobranças pagas, maior a nota
+  const taxaPagamento = totalPago / totalCharges;
+  const pontosTaxa = taxaPagamento * 35;
+
+  // 2. Pontualidade (0-30 pts)
+  //    Das pagas, quantas foram em dia ou antes
+  let pagasEmDia = 0;
+  let diasAtrasoMedio = 0;
+
+  pagas.forEach(c => {
     if (!c.data_pagamento) return;
     const vencimento = parseISO(c.data_vencimento);
     const pagamento = parseISO(c.data_pagamento);
-    const diferencaDias = differenceInDays(pagamento, vencimento);
-    
-    if (diferencaDias <= 0) total += 10;
-    else if (diferencaDias <= 7) total += 5;
-    else if (diferencaDias <= 15) total += 0;
-    else total -= 10;
-    
-    count++;
+    const diff = differenceInDays(pagamento, vencimento);
+    if (diff <= 0) {
+      pagasEmDia++;
+    } else {
+      diasAtrasoMedio += diff;
+    }
   });
-  
-  overdueCharges.forEach(() => {
-    total -= 10;
-    count++;
-  });
-  
-  const score = 80 + (total / count);
+
+  const taxaEmDia = totalPago > 0 ? pagasEmDia / totalPago : 0;
+  const pontosPontualidade = taxaEmDia * 30;
+
+  // 3. Severidade do atraso (0-20 pts, quanto MENOS atraso, MAIS pontos)
+  //    Penaliza dias de atraso em cobranças pagas com atraso
+  const pagasComAtraso = totalPago - pagasEmDia;
+  if (pagasComAtraso > 0) {
+    diasAtrasoMedio = diasAtrasoMedio / pagasComAtraso;
+  }
+  // Atraso médio de 0 dias = 20 pts, 30+ dias = 0 pts
+  const pontosAtraso = Math.max(0, 20 - (diasAtrasoMedio / 30) * 20);
+
+  // 4. Dívida em aberto (0-15 pts)
+  //    Penaliza cobranças ainda não pagas
+  const valorTotal = charges.reduce((s, c) => s + Number(c.valor), 0);
+  const valorPago = pagas.reduce((s, c) => s + Number(c.valor_pago || c.valor), 0);
+  const valorRestante = valorTotal - valorPago;
+  const ratioDivida = valorTotal > 0 ? valorRestante / valorTotal : 0;
+  // Sem divida = 15 pts, 100% devendo = 0 pts
+  const pontosDivida = (1 - ratioDivida) * 15;
+
+  const score = pontosTaxa + pontosPontualidade + pontosAtraso + pontosDivida;
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 

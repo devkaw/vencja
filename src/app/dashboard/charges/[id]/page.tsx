@@ -136,7 +136,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
             client_id: charge.client_id,
             valor: valorRecebido,
             valor_pago: valorRecebido,
-            data_vencimento: paymentDate,
+            data_vencimento: charge.data_vencimento,
             data_pagamento: paymentDate,
             status: 'pago',
             descricao: `${charge.descricao || 'Cobrança'} (parcial)`,
@@ -160,16 +160,12 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
         });
 
         if (novoValorRestante > 0) {
-          const dataVencimentoRestante = isVencido(charge.data_vencimento) 
-            ? new Date().toISOString().split('T')[0] 
-            : charge.data_vencimento;
-
           await supabase.from('charges').insert({
             user_id: charge.user_id,
             client_id: charge.client_id,
             valor: novoValorRestante,
             valor_pago: 0,
-            data_vencimento: dataVencimentoRestante,
+            data_vencimento: charge.data_vencimento,
             status: 'pendente',
             descricao: `${charge.descricao || 'Cobrança'} (restante)`,
             recorrente: charge.recorrente,
@@ -492,43 +488,57 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
           )}
 
           {vencido && client.telefone && (
-            <a
-              href={gerarLinkWhatsApp(
-                client.nome,
-                client.telefone,
-                Number(charge.valor),
-                charge.data_vencimento,
-                'atrasado',
-                charge.descricao || undefined,
-                userName
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-light text-sm sm:text-base"
-            >
-              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-              Cobrar via WhatsApp
-            </a>
+            hasPremiumAccess(profile) ? (
+              <a
+                href={gerarLinkWhatsApp(
+                  client.nome,
+                  client.telefone,
+                  Number(charge.valor),
+                  charge.data_vencimento,
+                  'atrasado',
+                  charge.descricao || undefined,
+                  userName
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-light text-sm sm:text-base"
+              >
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                Cobrar via WhatsApp
+              </a>
+            ) : (
+              <Link href="/dashboard/upgrade" className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-light text-sm sm:text-base">
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                Cobrar via WhatsApp
+              </Link>
+            )
           )}
 
           {!vencido && charge.status === 'pendente' && client.telefone && (
-            <a
-              href={gerarLinkWhatsApp(
-                client.nome,
-                client.telefone,
-                Number(charge.valor),
-                charge.data_vencimento,
-                'pendente',
-                charge.descricao || undefined,
-                userName
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-light text-sm sm:text-base"
-            >
-              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-              Cobrar via WhatsApp
-            </a>
+            hasPremiumAccess(profile) ? (
+              <a
+                href={gerarLinkWhatsApp(
+                  client.nome,
+                  client.telefone,
+                  Number(charge.valor),
+                  charge.data_vencimento,
+                  'pendente',
+                  charge.descricao || undefined,
+                  userName
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-light text-sm sm:text-base"
+              >
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                Cobrar via WhatsApp
+              </a>
+            ) : (
+              <Link href="/dashboard/upgrade" className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg font-light text-sm sm:text-base">
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                Cobrar via WhatsApp
+              </Link>
+            )
           )}
         </CardContent>
       </Card>

@@ -12,6 +12,8 @@ export async function middleware(request: NextRequest) {
     '/reset-password',
     '/auth/callback',
     '/help',
+    '/termos',
+    '/privacidade',
     '/api/debug-email',
     '/sitemap.xml',
     '/robots.txt',

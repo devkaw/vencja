@@ -94,7 +94,7 @@ npm install
 ### 3. Configurar Variáveis de Ambiente
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 Preencha com suas credenciais:
@@ -108,7 +108,11 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_key
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Resend (Email)
+# Gmail SMTP (Email Transactional)
+GMAIL_USER=seu-email@gmail.com
+GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+
+# Resend (Email API)
 RESEND_API_KEY=re_xxx
 RESEND_FROM_EMAIL=noreply@seudominio.com.br
 

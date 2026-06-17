@@ -11,12 +11,14 @@ import { Modal } from '@/components/ui/modal';
 import { formatCurrency, formatDate, formatPhone, calcularDiasAtraso, isVencido, gerarLinkWhatsAppCobranca, calcularScore } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
-import type { Client, Charge } from '@/types';
+import { hasPremiumAccess } from '@/lib/subscription';
+import type { Client, Charge, Profile } from '@/types';
 
 export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [client, setClient] = useState<Client | null>(null);
   const [charges, setCharges] = useState<Charge[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [userName, setUserName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -30,6 +32,9 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
     async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      const profileRes = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      setProfile(profileRes.data);
 
       const searchParams = new URLSearchParams(window.location.search);
       const shouldEdit = searchParams.get('edit') === 'true';
@@ -233,20 +238,27 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
               </div>
 
               {chargesToCobrar.length > 0 && client.telefone && (
-                <a
-                  href={gerarLinkWhatsAppCobranca(client.nome, client.telefone, chargesToCobrar.map(c => ({
-                    valor: Number(c.valor),
-                    vencimento: c.data_vencimento,
-                    status: isVencido(c.data_vencimento) ? 'atrasado' : 'vencendo',
-                    descricao: c.descricao || undefined
-                  })), userName)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg mt-4 sm:mt-6 font-light text-sm sm:text-base"
-                >
-                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-                  Cobrar via WhatsApp ({chargesToCobrar.length})
-                </a>
+                hasPremiumAccess(profile) ? (
+                  <a
+                    href={gerarLinkWhatsAppCobranca(client.nome, client.telefone, chargesToCobrar.map(c => ({
+                      valor: Number(c.valor),
+                      vencimento: c.data_vencimento,
+                      status: isVencido(c.data_vencimento) ? 'atrasado' : 'vencendo',
+                      descricao: c.descricao || undefined
+                    })), userName)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg mt-4 sm:mt-6 font-light text-sm sm:text-base"
+                  >
+                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Cobrar via WhatsApp ({chargesToCobrar.length})
+                  </a>
+                ) : (
+                  <Link href="/dashboard/upgrade" className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-black rounded-lg mt-4 sm:mt-6 font-light text-sm sm:text-base">
+                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Cobrar via WhatsApp ({chargesToCobrar.length})
+                  </Link>
+                )
               )}
             </CardContent>
           </Card>

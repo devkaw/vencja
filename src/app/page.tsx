@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  ArrowRight, Check, BarChart3, Users, Calendar, Receipt, TrendingDown, Shield, Clock, Star, Zap, ChevronDown, Mail, X, Menu, AlertCircle,
+  ArrowRight, Check, BarChart3, Users, Calendar, Receipt, TrendingDown, Shield, Clock, Star, ChevronDown, Mail, X, Menu, AlertCircle,
   Target, DollarSign, Wallet, PieChart, FileText, Bell, Lock, CreditCard, Smartphone, Globe, Award, ThumbsUp, ArrowUpRight, ArrowDownRight,
   MessageCircle, TrendingUp, Download, CalendarCheck, Send, RefreshCw, BarChart, Gauge, LockKeyhole
 } from 'lucide-react';
@@ -13,16 +13,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/client';
 
-const fadeIn = { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } };
-const stagger = { animate: { transition: { staggerChildren: 0.08 } } };
+const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } };
+const stagger = { animate: { transition: { staggerChildren: 0.1 } } };
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
   const supabase = createClient();
 
   useEffect(() => {
@@ -34,26 +32,28 @@ export default function LandingPage() {
   }, []);
 
   const features = [
-    { icon: BarChart3, title: 'Dashboard Inteligente', description: 'Visão geral completa do seu negócio com métricas, gráficos e indicadores financeiros atualizados.', stats: 'Métricas do negócio' },
-    { icon: Users, title: 'Gestão de Clientes', description: 'Cadastro completo com histórico de pagamentos. Score (0-100) calculado automaticamente com base no comportamento de pagamento.', stats: 'Score automático' },
-    { icon: Receipt, title: 'Cobranças Flexíveis', description: 'Crie cobranças avulsas ou configure cobranças recorrentes. Acompanhe quem pagou e quem está devendo.', stats: 'Controle total' },
-    { icon: Calendar, title: 'Calendário Financeiro', description: 'Visualize todas as datas de vencimento em um calendário interativo. Nunca mais perca um prazo.', stats: 'Visual' },
-    { icon: TrendingDown, title: 'Ranking de Inadimplência', description: 'Identifique rapidamente seus clientes com maior e menor Score. Organize cobranças por prioridade.', stats: 'Automático' },
-    { icon: Shield, title: 'Segurança e LGPD', description: 'Seus dados protegidos com criptografia. Conformidade total com a LGPD brasileira.', stats: 'LGPD' },
-    { icon: Smartphone, title: 'Acesso Mobile', description: 'Acesse pelo navegador em qualquer dispositivo. Interface responsiva que funciona em celulares e tablets.', stats: 'Navegador' },
-    { icon: FileText, title: 'Exportação de Dados', description: 'Exporte seus clientes e cobranças para planilhas CSV. Faça backup dos seus dados quando precisar.', stats: 'CSV' },
+    { icon: BarChart3, title: 'Dashboard Inteligente', description: 'Veja na hora quem pagou, quem deve e quanto está perdendo. Tudo em um só lugar, sem planilha.', stats: 'Em tempo real' },
+    { icon: Gauge, title: 'Score de Clientes', description: 'Receba uma nota de 0 a 100 para cada cliente. Saiba de quem pode confiar antes de fechar serviço.', stats: 'Automático' },
+    { icon: Receipt, title: 'Cobranças Flexíveis', description: 'Crie cobrança avulsa ou recorrente. Controle quem pagou, quem está devendo e quem atrasou.', stats: 'Simples' },
+    { icon: Calendar, title: 'Calendário Financeiro', description: 'Veja no calendário o dia que cada cliente vence. Nunca mais esqueça de cobrar.', stats: 'Visual' },
+    { icon: TrendingDown, title: 'Ranking de Inadimplência', description: 'Lista ordenada de quem mais deve. Priorize seus esforços de cobrança onde importa.', stats: 'Priorizado' },
+    { icon: MessageCircle, title: 'Cobrança via WhatsApp', description: 'Gere a mensagem pronta e envie direto pro cliente. Copia e cola, sem enrolação.', stats: 'Pro' },
+    { icon: Download, title: 'Exportação CSV', description: 'Exporte seus clientes e cobranças para planilha. Faça seu controle fora do sistema se preferir.', stats: 'CSV' },
+    { icon: Shield, title: 'Segurança e LGPD', description: 'Seus dados ficam protegidos e criptografados. Ninguém acessa senão você.', stats: 'Protegido' },
   ];
 
   const benefits = [
-    { title: 'Menos inadimplência', description: 'Com o Score automático você sabe quem são seus melhores e piores pagadores. Foque sua energia onde importa.', icon: TrendingDown },
-    { title: 'Tempo economizado', description: 'Organize tudo em um só lugar. visualize quem deve, quanto deve e quando venceu.', icon: Clock },
-    { title: 'Decisões informadas', description: 'Dashboard com métricas reais do seu negócio para você tomar melhores decisões.', icon: BarChart3 },
-    { title: 'Zero complexidade', description: 'Interface simples e intuitiva. Comece a usar em menos de 5 minutos.', icon: Target },
+    { title: 'Pare de correr atrás de dinheiro', description: 'Com o Score automático, você sabe de quem pode confiar. Cobrar cliente que já é conhecido por não pagar é perda de tempo.', icon: TrendingDown },
+    { title: 'Cobre em 2 cliques', description: 'Gere a mensagem de cobrança e envie pelo WhatsApp. Sem digitar valor, sem errar dados, sem enrolação.', icon: MessageCircle },
+    { title: 'Saiba quanto está devendo', description: 'Dashboard mostra exatamente quem pagou, quem não pagou e quanto você está perdendo por mês.', icon: BarChart3 },
+    { title: 'Em 5 minutos está pronto', description: 'Não precisa de planilha, contador ou curso. Cadastre seus clientes e comece a cobrar agora.', icon: Target },
   ];
 
   const testimonials = [
-    { name: 'Marcos Silva', role: 'Eletricista', company: 'Autônomo', text: 'Agora consigo acompanhar todas as minhas cobranças sem perder nenhum cliente de vista. O Score me ajuda a saber quem posso confiar.', rating: 5, image: 'MS' },
-    { name: 'Juliana Costa', role: 'Cabeleireira', company: 'Studio Beleza', text: 'Simples e prático. Em 5 minutos já estava cadastrando meus clientes e criando cobranças. O melhor investimento que fiz.', rating: 5, image: 'JC' },
+    { name: 'Marcos Silva', role: 'Eletricista', text: 'Antes eu perdia cliente por esquecer de cobrar. Agora o calendário me avisa. Já recuperei mais de R$ 2.000 em dívidas que iam pro esquecimento.', rating: 5, image: 'MS' },
+    { name: 'Juliana Costa', role: 'Cabeleireira', text: 'Tinha cliente que "esquecia" de pagar. O Score me mostrou quem era. Agora cobro antes de iniciar o serviço. Nunca mais perdi dinheiro.', rating: 5, image: 'JC' },
+    { name: 'Pedro Santos', role: 'Pedreiro', text: 'Cobrava na mão e sempre tinha um que sumia. Agora mando pelo WhatsApp com tudo certo. O VenceJa se paga com um único cliente que paga em dia.', rating: 5, image: 'PS' },
+    { name: 'Ana Ribeiro', role: 'Personal Trainer', text: 'Organizava tudo no caderninho. Quando percebi, tinha R$ 3.000 devendo. Agora sei exatamente quem deve e quanto. Melhor investimento que fiz.', rating: 5, image: 'AR' },
   ];
 
   const plans = [
@@ -61,15 +61,14 @@ export default function LandingPage() {
       name: 'Gratuito', 
       price: 'R$ 0', 
       period: 'para sempre', 
-      description: 'Ideal para testar a plataforma e profissionais autônomos que estão começando',
+      description: 'Para quem está começando ou quer testar antes de investir',
       features: [
         '3 clientes',
-        '10 cobranças',
-        'Dashboard inteligente',
-        'Score de clientes',
+        '10 cobranças por mês',
+        'Dashboard com métricas',
+        'Score automático de clientes',
         'Ranking de inadimplência',
         'Calendário financeiro',
-        'Suporte por email',
         'Cobranças recorrentes',
         'Pagamento parcial',
       ], 
@@ -80,7 +79,7 @@ export default function LandingPage() {
       name: 'Pro', 
       price: 'R$ 49,90', 
       period: '/mês', 
-      description: 'Para profissionais e empresas que precisam de mais recursos',
+      description: 'Para quem já tem clientes e quer parar de perder dinheiro',
       features: [
         'Clientes ilimitados',
         'Cobranças ilimitadas',
@@ -92,28 +91,26 @@ export default function LandingPage() {
       cta: 'Assinar Agora', 
       popular: true, 
       annualPrice: 'R$ 499/ano',
-      annualDiscount: '17% OFF' 
+      annualDiscount: 'Economize 17%' 
     },
   ];
 
   const faqs = [
-    { q: 'Como funciona o plano gratuito?', a: 'O plano gratuito permite até 3 clientes e 10 cobranças por mês. Ideal para testar a plataforma e profissionais autônomos que estão começando.' },
-    { q: 'Posso mudar de plano a qualquer momento?', a: 'Sim! Você pode fazer upgrade ou downgrade quando quiser. As mudanças são aplicadas na próxima cobrança, sem multas ou taxas extras.' },
-    { q: 'Meus dados estão seguros com a LGPD?', a: 'Com certeza! Somos 100% compliant com a LGPD. Seus dados são criptografados, nunca são compartilhados e você pode solicitar a exclusão a qualquer momento.' },
-    { q: 'Posso exportar meus dados?', a: 'Sim! No plano Pro você pode exportar todos os seus clientes e cobranças para CSV. Faça backup sempre que precisar.' },
-    { q: 'O sistema funciona no celular?', a: 'Acesse pelo navegador em qualquer dispositivo. O sistema é responsivo e funciona perfeitamente em celulares e tablets.' },
-    { q: 'Como funciona o Score de clientes?', a: 'Nosso algoritmo analisa o histórico de pagamentos de cada cliente e atribui uma nota de 0-100. Quanto maior, mais confiável. Score acima de 70 é considerado bom pagador.' },
-    { q: 'Posso cancelar quando quiser?', a: 'Sim, sem multas ou taxas de cancelamento. É só cancelar nas configurações da sua conta e continuamos amigos.' },
-    { q: 'Tenho garantia de reembolso?', a: 'Sim! Você tem 7 dias após a primeira compra para solicitar reembolso total. É só ir em Configurações > Plano e solicitar. Sem perguntas, sem burocracia.' },
-    { q: 'Como funciona a cobrança via WhatsApp?', a: 'No plano Pro, o sistema gera uma mensagem pronta com os dados da cobrança que você pode copiar e enviar direto pelo WhatsApp do cliente.' },
-    { q: 'O que são cobranças recorrentes?', a: 'São cobranças que se repetem automaticamente. Você configura semanal ou mensal e o sistema cria as novas cobranças após cada vencimento. Ideal para assinaturas.' },
-    { q: 'Preciso de internet para usar?', a: 'Sim, o VenceJa é uma ferramenta online accesseda pelo navegador. Para cobrar via WhatsApp, você precisa ter internet no momento do envio.' },
+    { q: 'Vale a pena pra quem fatura pouco?', a: 'Sim! Se você tem apenas 3 clientes que pagam em dia, o plano gratuito já resolve. Se já perdeu dinheiro com cliente inadimplente, o Pro se paga com um único pagamento recuperado.' },
+    { q: 'Funciona pra quem cobra por obra ou serviço?', a: 'Perfeitamente. Você cadastra o cliente, define o valor e a data de vencimento. Funciona para qualquer tipo de cobrança: hora, dia, obra fechada ou recorrente.' },
+    { q: 'E se eu não tiver muitos clientes?', a: 'O plano gratuito suporta até 3 clientes e 10 cobranças. É ideal para quem está começando ou tem poucos clientes fixos.' },
+    { q: 'Como o Score ajuda no meu dia a dia?', a: 'O Score analisa o histórico de pagamentos de cada cliente e dá uma nota de 0 a 100. Acima de 70 é bom pagador. Abaixo de 50, cuidado. Você sabe com quem pode confiar.' },
+    { q: 'Preciso de internet para usar?', a: 'Sim, é uma ferramenta online. Mas funciona perfeitamente no celular pelo navegador. Para cobrar via WhatsApp, você já está usando o celular mesmo.' },
+    { q: 'Posso cancelar quando quiser?', a: 'Sim, sem multa nem burocracia. É só cancelar nas configurações. Se cancelar no mesmo mês, não paga nada.' },
+    { q: 'Tenho garantia de reembolso?', a: 'Sim! 7 dias após a compra, sem perguntas. Se não gostar, devolvemos 100%. É só ir em Configurações > Plano.' },
+    { q: 'Como funciona a cobrança via WhatsApp?', a: 'O sistema gera uma mensagem pronta com o valor, vencimento e descrição. Você copia e envia direto pelo WhatsApp. Sem digitar tudo de novo.' },
+    { q: 'O que são cobranças recorrentes?', a: 'Cobranças que se repetem automaticamente: semanal ou mensal. Você configura uma vez e o sistema cria as próximas. Ideal para clientes fixos.' },
   ];
 
   const howItWorks = [
-    { step: '01', title: 'Cadastre seus clientes', desc: 'Adicione nome, email e telefone. O Score é calculado automaticamente baseado no histórico de pagamentos.', icon: Users },
-    { step: '02', title: 'Crie cobranças', desc: 'Defina valor, data de vencimento e descrição. No plano Pro, gere a mensagem para enviar pelo WhatsApp.', icon: Receipt },
-    { step: '03', title: 'Acompanhe tudo', desc: 'Dashboard com métricas e gráficos do seu negócio. Veja quem pagou e quem está devendo.', icon: BarChart3 },
+    { step: '01', title: 'Cadastre seus clientes', desc: 'Adicione nome, telefone e quanto devem. Em 5 minutos você já tem tudo organizado.', icon: Users },
+    { step: '02', title: 'Cobre em 2 cliques', desc: 'Defina valor e vencimento. Se for Pro, gere a mensagem pronta pro WhatsApp.', icon: Receipt },
+    { step: '03', title: 'Acompanhe quem pagou', desc: 'Dashboard mostra quem está em dia e quem está devendo. Calendário avisa antes do vencimento.', icon: BarChart3 },
   ];
 
   const trustItems = [
@@ -128,9 +125,6 @@ export default function LandingPage() {
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
       <div className="fixed inset-0 bg-grid pointer-events-none opacity-30" />
       <div className="fixed inset-0 hero-glow opacity-50" style={{ top: '-30%', left: '50%', transform: 'translateX(-50%)' }} />
-      
-      <motion.div animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }} transition={{ duration: 8, repeat: Infinity }} className="fixed top-1/4 left-10 w-72 h-72 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
-      <motion.div animate={{ y: [0, 30, 0], rotate: [0, -5, 0] }} transition={{ duration: 10, repeat: Infinity }} className="fixed bottom-1/4 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'py-3 shadow-2xl backdrop-blur-2xl bg-black/95 border-b border-white/10' : 'py-5 backdrop-blur-lg bg-black/60'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -183,20 +177,16 @@ export default function LandingPage() {
       )}
 
       {/* Hero Section */}
-      <motion.section style={{ y: heroY }} className="relative pt-40 pb-28 lg:pt-56 lg:pb-36 px-4 sm:px-6 lg:px-8">
+      <section className="relative pt-40 pb-28 lg:pt-56 lg:pb-36 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="initial" animate="animate" variants={stagger} className="text-center max-w-5xl mx-auto">
-            <motion.div variants={fadeIn}>
-              <Badge variant="primary" className="text-sm py-2 px-5 mb-8 ring-1 ring-accent/30"><Zap className="w-4 h-4 mr-2" />Assinaturas automáticas disponíveis</Badge>
-            </motion.div>
-            
             <motion.h1 variants={fadeIn} className="text-5xl sm:text-6xl lg:text-7xl font-extralight tracking-tight mb-8 leading-tight">
-              A gestão do seu negócio<br />
-              <span className="text-gradient">em um só lugar</span>
+              Pare de perder dinheiro<br />
+              <span className="text-gradient">com inadimplência</span>
             </motion.h1>
 
             <motion.p variants={fadeIn} className="text-xl lg:text-2xl text-slate-400 font-light max-w-3xl mx-auto mb-10 leading-relaxed">
-              Gerencie clientes, crie cobranças e acompanhe pagamentos em um só lugar. Ideal para autônomos e pequenas empresas que querem organizar as finanças.
+              Saiba quem paga, quem deve e quanto está perdendo. Em 5 minutos você organiza suas cobranças e para de correr atrás de dinheiro.
             </motion.p>
 
             <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-5 justify-center items-center mb-12">
@@ -225,10 +215,10 @@ export default function LandingPage() {
             </motion.div>
           </motion.div>
         </div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="absolute bottom-4 left-1/2 -translate-x-1/2">
-          <ChevronDown className="w-6 h-6 text-slate-600 animate-bounce" />
-        </motion.div>
-      </motion.section>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <ChevronDown className="w-6 h-6 text-slate-500 animate-bounce" />
+        </div>
+      </section>
 
       {/* Benefits Section - New */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent via-black/50 to-transparent">
@@ -254,8 +244,8 @@ export default function LandingPage() {
             <motion.div variants={fadeIn} className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent/10 rounded-full text-accent text-sm font-light mb-6 backdrop-blur-sm">
               <Star className="w-4 h-4" />Funcionalidades
             </motion.div>
-            <motion.h2 variants={fadeIn} className="text-4xl sm:text-5xl font-extralight mb-6">Tudo que você precisa</motion.h2>
-            <motion.p variants={fadeIn} className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Uma plataforma completa para gerenciar clientes, cobranças e o financeiro do seu negócio.</motion.p>
+            <motion.h2 variants={fadeIn} className="text-4xl sm:text-5xl font-extralight mb-6">Tudo que você precisa pra cobrar</motion.h2>
+            <motion.p variants={fadeIn} className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Ferramentas reais para quem trabalha por conta própria e não quer mais perder dinheiro com cliente que não paga.</motion.p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -282,7 +272,7 @@ export default function LandingPage() {
               <Target className="w-4 h-4" />Simples
             </div>
             <h2 className="text-4xl sm:text-5xl font-extralight mb-6">Como funciona</h2>
-            <p className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Em 3 passos você começa a gerenciar:</p>
+            <p className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Em 3 passos você para de perder dinheiro:</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -306,10 +296,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-warning/10 rounded-full text-warning text-sm font-light mb-6 backdrop-blur-sm">
-              <ThumbsUp className="w-4 h-4" />Depoimentos
+              <ThumbsUp className="w-4 h-4" />Quem usa, recomenda
             </div>
-            <h2 className="text-4xl sm:text-5xl font-extralight mb-6">O que dizem nossos clientes</h2>
-            <p className="text-xl text-slate-400 font-light">Profissionais que transformaram a gestão do seu negócio</p>
+            <h2 className="text-4xl sm:text-5xl font-extralight mb-6">Quem já parou de perder dinheiro</h2>
+            <p className="text-xl text-slate-400 font-light">Autônomos que transformaram a forma de cobrar</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -320,7 +310,7 @@ export default function LandingPage() {
                 <p className="text-lg text-slate-200 font-light mb-6 leading-relaxed">"{t.text}"</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-black font-light text-lg">{t.image}</div>
-                  <div><div className="font-light">{t.name}</div><div className="text-sm text-slate-500">{t.role} · {t.company}</div></div>
+                  <div><div className="font-light">{t.name}</div><div className="text-sm text-slate-500">{t.role}</div></div>
                 </div>
               </motion.div>
             ))}
@@ -335,8 +325,8 @@ export default function LandingPage() {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent/10 rounded-full text-accent text-sm font-light mb-6 backdrop-blur-sm">
               <CreditCard className="w-4 h-4" />Planos
             </div>
-            <h2 className="text-4xl sm:text-5xl font-extralight mb-6">Simple e acessível</h2>
-            <p className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Escolha o plano ideal para o seu negócio. Sem letras pequenas.</p>
+            <h2 className="text-4xl sm:text-5xl font-extralight mb-6">Simples e que se paga</h2>
+            <p className="text-xl text-slate-400 font-light max-w-2xl mx-auto">Um único cliente que paga em dia já cobre o plano Pro. Comece grátis.</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -386,11 +376,11 @@ export default function LandingPage() {
       <section className="py-24 lg:py-36 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent via-accent/5 to-transparent">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="glass-card backdrop-blur-xl rounded-3xl p-12 lg:p-16 border border-white/10">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extralight mb-6">Organize a gestão do seu negócio</h2>
-            <p className="text-xl text-slate-400 font-light mb-8 max-w-2xl mx-auto">Comece agora mesmo. É gratuito e sem compromisso.</p>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extralight mb-6">Comece a receber o que é seu</h2>
+            <p className="text-xl text-slate-400 font-light mb-8 max-w-2xl mx-auto">Não perca mais tempo cobrando na mão. Organize tudo em 5 minutos.</p>
             <Link href="/register">
               <Button size="lg" className="bg-accent text-black px-12 py-5 text-xl shadow-2xl shadow-accent/30 hover:shadow-accent/50">
-                Começar Agora - É Grátis<ArrowRight className="w-6 h-6 ml-2" />
+                Começar Grátis agora<ArrowRight className="w-6 h-6 ml-2" />
               </Button>
             </Link>
           </motion.div>
@@ -403,7 +393,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-4"><Image src="/logo.png" alt="VenceJa" width={32} height={32} className="w-8 h-8 rounded-lg" /><span className="text-lg font-light">VenceJa</span></div>
-              <p className="text-slate-500 font-light text-sm">Gestão empresarial simplificada para profissionais e pequenas empresas.</p>
+              <p className="text-slate-500 font-light text-sm">Cobrança simplificada para quem trabalha por conta própria.</p>
             </div>
             <div><h4 className="font-light mb-4">Produto</h4><div className="space-y-2 text-sm text-slate-400 font-light"><a href="#features" className="block hover:text-accent">Funcionalidades</a><a href="#precos" className="block hover:text-accent">Planos</a><a href="#faq" className="block hover:text-accent">FAQ</a></div></div>
             <div><h4 className="font-light mb-4">Suporte</h4><div className="space-y-2 text-sm text-slate-400 font-light"><a href="mailto:suporte@venceja.com.br" className="block hover:text-accent">Email</a><a href="/help" className="block hover:text-accent">Central de ajuda</a></div></div>
