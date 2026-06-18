@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
           type: 'subscription',
         },
         subscription: {
-          id: profile.subscription_id || `test_sub_${Date.now()}`,
+          id: `test_sub_${Date.now()}`,
           status: profile.subscription_status || 'active',
         },
         amount: profile.subscription_cycle === 'annual' ? 499.00 : 49.90,

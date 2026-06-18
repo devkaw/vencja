@@ -64,6 +64,13 @@ function normalizePayload(payload: CaktoWebhookPayload) {
   const data = payload.data || payload.order;
   if (!data) return null;
 
+  let subscriptionId: string | null = null;
+  if (payload.data?.subscription) {
+    subscriptionId = payload.data.subscription.id;
+  } else if (payload.order?.subscription) {
+    subscriptionId = payload.order.subscription;
+  }
+
   return {
     id: data.id,
     refId: data.refId,
@@ -72,7 +79,7 @@ function normalizePayload(payload: CaktoWebhookPayload) {
       email: data.customer?.email || '',
     },
     offer: data.offer || null,
-    subscription: data.subscription?.id || (payload.order as { subscription?: string })?.subscription || null,
+    subscription: subscriptionId,
     amount: data.amount || (payload.order as { amount?: string }) ? Number((payload.order as { amount?: string }).amount) : 0,
   };
 }
