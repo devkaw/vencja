@@ -11,6 +11,31 @@ import crypto from 'crypto';
 
 interface CaktoWebhookPayload {
   event: string;
+  data?: {
+    id: string;
+    refId: string;
+    status: string;
+    customer: {
+      name: string;
+      email: string;
+      docNumber?: string;
+    };
+    offer?: {
+      id: string;
+      name: string;
+      price: number;
+    };
+    product?: {
+      id: string;
+      name: string;
+      type: string;
+    };
+    subscription?: {
+      id: string;
+      status: string;
+    };
+    amount?: number;
+  };
   order?: {
     id: string;
     refId: string;
@@ -32,6 +57,23 @@ interface CaktoWebhookPayload {
       email: string;
       docNumber?: string;
     };
+  };
+}
+
+function normalizePayload(payload: CaktoWebhookPayload) {
+  const data = payload.data || payload.order;
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    refId: data.refId,
+    customer: {
+      name: data.customer?.name || '',
+      email: data.customer?.email || '',
+    },
+    offer: data.offer || null,
+    subscription: data.subscription?.id || (payload.order as { subscription?: string })?.subscription || null,
+    amount: data.amount || (payload.order as { amount?: string }) ? Number((payload.order as { amount?: string }).amount) : 0,
   };
 }
 
@@ -91,9 +133,10 @@ export async function POST(request: NextRequest) {
     }
 
     const payload: CaktoWebhookPayload = JSON.parse(body);
-    const { event, order } = payload;
+    const { event } = payload;
+    const order = normalizePayload(payload);
 
-    console.log('[Cakto Webhook] Received event:', event);
+    console.log('[Cakto Webhook] Received event:', event, 'Order ID:', order?.id);
 
     if (!order?.customer?.email) {
       console.error('[Cakto Webhook] No customer email in payload');
@@ -121,15 +164,41 @@ export async function POST(request: NextRequest) {
       processed_at: new Date().toISOString(),
     });
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
-      .eq('email', order.customer.email.toLowerCase())
-      .single();
+    let profile = null;
+    let profileError = null;
+
+    if (order.subscription) {
+      const result = await supabase
+        .from('profiles')
+        .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
+        .eq('subscription_id', order.subscription)
+        .single();
+      
+      if (!result.error && result.data) {
+        profile = result.data;
+        console.log('[Cakto Webhook] Found user by subscription_id:', order.subscription);
+      }
+    }
+
+    if (!profile) {
+      const result = await supabase
+        .from('profiles')
+        .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
+        .eq('email', order.customer.email.toLowerCase())
+        .single();
+      
+      if (!result.error && result.data) {
+        profile = result.data;
+        console.log('[Cakto Webhook] Found user by email:', order.customer.email);
+      } else {
+        profileError = result.error;
+      }
+    }
 
     if (profileError || !profile) {
-      console.log('[Cakto Webhook] Profile not found for email:', order.customer.email);
-      return NextResponse.json({ received: true });
+      console.error('[Cakto Webhook] Profile not found. Email:', order.customer.email, 'Subscription:', order.subscription);
+      console.error('[Cakto Webhook] Full payload:', JSON.stringify(payload, null, 2));
+      return NextResponse.json({ received: true, error: 'User not found' });
     }
 
     const userId = profile.id;
