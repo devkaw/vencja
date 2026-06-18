@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
+import { sendRefundRequestReceivedEmail } from '@/lib/email/payment-notifications';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contato@vencja.com.br';
@@ -69,6 +70,14 @@ export async function POST(request: NextRequest) {
       cancellation_status: 'pending',
     }).eq('id', user.id);
 
+    await sendRefundRequestReceivedEmail(
+      profile.email,
+      profile.full_name || profile.email.split('@')[0],
+      profile.subscription_cycle || 'monthly',
+      price,
+      daysRemaining
+    );
+
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
         from: `"VenceJa" <${process.env.RESEND_FROM_EMAIL}>`,
@@ -94,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Solicitação de reembolso enviada com sucesso',
+      message: 'Solicitação de reembolso enviada com sucesso. Você receberá um email de confirmação em breve.',
       status: 'pending',
       daysRemaining,
       purchaseDate: purchasedAt.toLocaleDateString('pt-BR'),

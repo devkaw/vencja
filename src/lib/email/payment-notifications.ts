@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { paymentConfirmedEmailTemplate, paymentRejectedEmailTemplate, subscriptionCanceledEmailTemplate } from '@/emails/templates/payment-email';
+import { paymentConfirmedEmailTemplate, paymentRejectedEmailTemplate, subscriptionCanceledEmailTemplate, cancellationRequestReceivedEmailTemplate, refundRequestReceivedEmailTemplate } from '@/emails/templates/payment-email';
 import { orderReceivedEmailTemplate } from '@/emails/templates/order-received-email';
 import { renewalReminderEmailTemplate, renewalConfirmedEmailTemplate } from '@/emails/templates/renewal-email';
 import { refundEmailTemplate } from '@/emails/templates/refund-email';
@@ -57,9 +57,30 @@ export async function sendPaymentRejectedEmail(
   return sendEmail(to, 'Pagamento não processado - VenceJa', html);
 }
 
-export async function sendSubscriptionCanceledEmail(to: string, name: string) {
-  const html = subscriptionCanceledEmailTemplate(name);
+export async function sendSubscriptionCanceledEmail(to: string, name: string, endDate?: string) {
+  const html = subscriptionCanceledEmailTemplate(name, endDate);
   return sendEmail(to, 'Assinatura cancelada - VenceJa', html);
+}
+
+export async function sendCancellationRequestReceivedEmail(
+  to: string,
+  name: string,
+  planType: 'monthly' | 'annual',
+  endDate: string
+) {
+  const html = cancellationRequestReceivedEmailTemplate(name, planType, endDate);
+  return sendEmail(to, 'Solicitação de cancelamento recebida - VenceJa', html);
+}
+
+export async function sendRefundRequestReceivedEmail(
+  to: string,
+  name: string,
+  planType: 'monthly' | 'annual',
+  price: number,
+  daysRemaining: number
+) {
+  const html = refundRequestReceivedEmailTemplate(name, planType, price, daysRemaining);
+  return sendEmail(to, 'Solicitação de reembolso recebida - VenceJa', html);
 }
 
 export async function sendOrderReceivedEmail(

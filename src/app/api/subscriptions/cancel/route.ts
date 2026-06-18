@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
+import { sendCancellationRequestReceivedEmail } from '@/lib/email/payment-notifications';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contato@vencja.com.br';
@@ -42,6 +43,9 @@ export async function POST(request: NextRequest) {
     const endsAt = profile.subscription_ends_at 
       ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR')
       : 'fim do período atual';
+    const endsAtDate = profile.subscription_ends_at 
+      ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR')
+      : 'o fim do período atual';
 
     await supabase.from('profiles').update({
       cancellation_requested_at: new Date().toISOString(),
@@ -49,6 +53,13 @@ export async function POST(request: NextRequest) {
       cancellation_reason: reason || 'Não informado',
       cancellation_status: 'pending',
     }).eq('id', user.id);
+
+    await sendCancellationRequestReceivedEmail(
+      profile.email,
+      profile.full_name || profile.email.split('@')[0],
+      profile.subscription_cycle || 'monthly',
+      endsAtDate
+    );
 
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
@@ -71,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Solicitação de cancelamento enviada com sucesso',
+      message: 'Solicitação de cancelamento enviada com sucesso. Você receberá um email de confirmação em breve.',
       status: 'pending',
     });
 

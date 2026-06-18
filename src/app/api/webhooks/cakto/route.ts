@@ -4,9 +4,10 @@ import {
   sendPaymentConfirmedEmail,
   sendPaymentRejectedEmail,
   sendSubscriptionCanceledEmail,
-  sendOrderReceivedEmail,
   sendRefundEmail,
+  sendRenewalConfirmedEmail,
 } from '@/lib/email/payment-notifications';
+import crypto from 'crypto';
 
 interface CaktoWebhookPayload {
   event: string;
@@ -34,7 +35,24 @@ interface CaktoWebhookPayload {
   };
 }
 
-const processedEvents = new Set<string>();
+function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+  const secret = process.env.CAKTO_WEBHOOK_SECRET;
+  if (!secret) {
+    console.warn('[Cakto Webhook] CAKTO_WEBHOOK_SECRET not configured - skipping verification');
+    return true;
+  }
+  if (!signature) return false;
+  
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
 
 function getCycleFromOffer(offerName: string): 'monthly' | 'annual' {
   const name = offerName.toLowerCase();
@@ -64,7 +82,15 @@ function getNextBillingDate(cycle: 'monthly' | 'annual'): Date {
 
 export async function POST(request: NextRequest) {
   try {
-    const payload: CaktoWebhookPayload = await request.json();
+    const body = await request.text();
+    const signature = request.headers.get('x-cakto-signature');
+    
+    if (!verifyWebhookSignature(body, signature)) {
+      console.error('[Cakto Webhook] Invalid signature');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    const payload: CaktoWebhookPayload = JSON.parse(body);
     const { event, order } = payload;
 
     console.log('[Cakto Webhook] Received event:', event);
@@ -75,9 +101,29 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    
+    const eventKey = `${order.id}_${event}`;
+    const { data: existingEvent } = await supabase
+      .from('webhook_events')
+      .select('id')
+      .eq('event_key', eventKey)
+      .single();
+
+    if (existingEvent) {
+      console.log('[Cakto Webhook] Duplicate event, skipping:', eventKey);
+      return NextResponse.json({ received: true });
+    }
+
+    await supabase.from('webhook_events').insert({
+      event_key: eventKey,
+      event_type: event,
+      order_id: order.id,
+      processed_at: new Date().toISOString(),
+    });
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, email, full_name, plano, subscription_ends_at')
+      .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
       .eq('email', order.customer.email.toLowerCase())
       .single();
 
@@ -85,14 +131,6 @@ export async function POST(request: NextRequest) {
       console.log('[Cakto Webhook] Profile not found for email:', order.customer.email);
       return NextResponse.json({ received: true });
     }
-
-    const eventKey = `${order.id}_${event}`;
-    
-    if (processedEvents.has(eventKey)) {
-      console.log('[Cakto Webhook] Duplicate event, skipping:', eventKey);
-      return NextResponse.json({ received: true });
-    }
-    processedEvents.add(eventKey);
 
     const userId = profile.id;
     const customerName = order.customer.name || profile.full_name || order.customer.email.split('@')[0];
@@ -141,13 +179,23 @@ export async function POST(request: NextRequest) {
         const nextBillingDate = getNextBillingDate(cycle);
 
         await supabase.from('profiles').update({
+          subscription_status: 'active',
           subscription_ends_at: nextBillingDate.toISOString(),
         }).eq('id', userId);
 
         await supabase.from('subscriptions').update({
+          status: 'active',
           current_period_start: new Date().toISOString(),
           current_period_end: nextBillingDate.toISOString(),
         }).eq('subscription_id', order.subscription || order.id);
+
+        await sendRenewalConfirmedEmail(
+          order.customer.email,
+          customerName,
+          cycle,
+          price,
+          nextBillingDate.toLocaleDateString('pt-BR')
+        );
 
         console.log('[Cakto Webhook] Subscription renewed for user:', userId);
         break;
@@ -175,6 +223,7 @@ export async function POST(request: NextRequest) {
       case 'subscription_canceled': {
         const currentEndsAt = profile.subscription_ends_at;
         const currentEndDate = currentEndsAt ? new Date(currentEndsAt) : new Date();
+        const endDateFormatted = currentEndDate.toLocaleDateString('pt-BR');
         
         if (currentEndDate > new Date()) {
           await supabase.from('profiles').update({
@@ -203,7 +252,8 @@ export async function POST(request: NextRequest) {
 
         await sendSubscriptionCanceledEmail(
           order.customer.email,
-          customerName
+          customerName,
+          endDateFormatted
         );
 
         console.log('[Cakto Webhook] Subscription canceled for user:', userId);

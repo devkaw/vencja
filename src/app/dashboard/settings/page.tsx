@@ -332,30 +332,34 @@ export default function SettingsPage() {
           {activeSection === 'plan' && (
             <div className="space-y-4">
               <div className={`glass-card rounded-2xl p-6 border-2 ${isPro ? 'border-accent' : ''}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${isPro ? 'bg-accent/20' : 'bg-white/5'}`}>
-                      <Crown className={`w-7 h-7 ${isPro ? 'text-accent' : 'text-slate-400'}`} />
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${isPro ? 'bg-accent/20' : 'bg-white/5'}`}>
+                          <Crown className={`w-7 h-7 ${isPro ? 'text-accent' : 'text-slate-400'}`} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-light">{isPro ? 'Plano Pro' : 'Plano Grátis'}</h3>
+                          <p className="text-slate-400 text-sm">
+                            {isPro 
+                              ? cancellationStatus === 'pending' 
+                                ? cancellationType === 'refund' 
+                                  ? `Reembolso em análise - Processamento em até 24h`
+                                  : `Cancelamento em análise - Processamento em até 24h`
+                                : profile?.subscription_status === 'canceled' 
+                                  ? `Acesso até ${profile?.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR') : 'fim do período'}`
+                                  : 'Acesso completo e ilimitado'
+                              : `${PLANS.free.limits.maxClients} clientes, ${PLANS.free.limits.maxCharges} cobranças`}
+                          </p>
+                        </div>
+                      </div>
+                      {isPro && (
+                        cancellationStatus === 'pending' 
+                          ? <Badge className="bg-yellow-500/20 text-yellow-500">Em análise</Badge>
+                          : profile?.subscription_status === 'canceled'
+                            ? <Badge className="bg-orange-500/20 text-orange-500">Cancelado</Badge>
+                            : <Badge className="bg-accent/20 text-accent">Ativo</Badge>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-light">{isPro ? 'Plano Pro' : 'Plano Grátis'}</h3>
-                      <p className="text-slate-400 text-sm">
-                        {isPro 
-                          ? cancellationStatus === 'pending' 
-                            ? cancellationType === 'refund' 
-                              ? `Reembolso pendente - ${cancellationTypeDisplay}`
-                              : `Cancelamento pendente`
-                            : 'Acesso completo e ilimitado'
-                          : `${PLANS.free.limits.maxClients} clientes, ${PLANS.free.limits.maxCharges} cobranças`}
-                      </p>
-                    </div>
-                  </div>
-                  {isPro && (
-                    cancellationStatus === 'pending' 
-                      ? <Badge className="bg-yellow-500/20 text-yellow-500">Pendente</Badge>
-                      : <Badge className="bg-accent/20 text-accent">Ativo</Badge>
-                  )}
-                </div>
                 {isPro ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10">
@@ -410,12 +414,15 @@ export default function SettingsPage() {
 
                     {cancellationStatus === 'pending' && cancellationType === 'refund' && (
                       <div className="pt-4 border-t border-white/10">
-                        <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                          <p className="text-sm text-yellow-500">
+                        <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                          <p className="text-sm text-blue-500">
                             <strong>Sua solicitação de reembolso está em análise.</strong>
                           </p>
                           <p className="text-xs text-slate-400 mt-1">
-                            Você receberá um email com a resposta em até 24 horas.
+                            Processamento em até 24 horas. Você manterá acesso ao Plano Pro enquanto o reembolso é processado.
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Após aprovação, o valor será estornado em até 5 dias úteis.
                           </p>
                         </div>
                       </div>
@@ -425,10 +432,13 @@ export default function SettingsPage() {
                       <div className="pt-4 border-t border-white/10">
                         <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                           <p className="text-sm text-yellow-500">
-                            <strong>Sua solicitação de cancelamento foi enviada.</strong>
+                            <strong>Sua solicitação de cancelamento está em análise.</strong>
                           </p>
                           <p className="text-xs text-slate-400 mt-1">
-                            Você terá acesso até o fim do período pago. Após isso, voltará automaticamente para o plano gratuito.
+                            Processamento em até 24 horas. Você manterá acesso ao Plano Pro até o fim do período pago ({profile?.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR') : 'verificando...'}).
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Após essa data, seu plano será automaticamente alterado para o plano gratuito.
                           </p>
                         </div>
                       </div>
