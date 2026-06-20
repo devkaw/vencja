@@ -85,7 +85,7 @@ function normalizePayload(payload: CaktoWebhookPayload) {
     },
     offer: data.offer || null,
     subscription: subscriptionId,
-    amount: data.amount || (payload.order as { amount?: string }) ? Number((payload.order as { amount?: string }).amount) : 0,
+    amount: data.amount || (payload.order ? Number(payload.order.amount) : 0),
   };
 }
 

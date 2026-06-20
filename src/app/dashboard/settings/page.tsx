@@ -39,6 +39,7 @@ export default function SettingsPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [cancelConfirmed, setCancelConfirmed] = useState(false);
   const [refundReason, setRefundReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
@@ -149,6 +150,10 @@ export default function SettingsPage() {
   };
 
   const handleCancelSubscription = async () => {
+    if (!cancelConfirmed) {
+      addToast('error', 'Confirme que você entende os termos do cancelamento');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/subscriptions/cancel', {
@@ -537,7 +542,7 @@ export default function SettingsPage() {
         </div>
       </Modal>
 
-      <Modal isOpen={showCancelModal} onClose={() => { setShowCancelModal(false); setCancelReason(''); }} title="Cancelar Assinatura" size="sm">
+      <Modal isOpen={showCancelModal} onClose={() => { setShowCancelModal(false); setCancelReason(''); setCancelConfirmed(false); }} title="Cancelar Assinatura" size="sm">
         <div className="space-y-4">
           <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm text-slate-300">
             <p><strong>Atenção:</strong> Ao cancelar, você perderá acesso ao plano Pro no fim do período pago ({profile?.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR') : 'em breve'}).</p>
@@ -560,12 +565,17 @@ export default function SettingsPage() {
           </div>
           <div className="p-3 bg-white/5 rounded-lg">
             <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" className="mt-1 w-4 h-4 accent-accent" />
+              <input 
+                type="checkbox" 
+                className="mt-1 w-4 h-4 accent-accent" 
+                checked={cancelConfirmed}
+                onChange={(e) => setCancelConfirmed(e.target.checked)}
+              />
               <span className="text-sm text-slate-400">Entendo que estou solicitando o cancelamento e que não terei direito a reembolso após este pedido.</span>
             </label>
           </div>
           <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => { setShowCancelModal(false); setCancelReason(''); }}>Voltar</Button>
+            <Button variant="ghost" onClick={() => { setShowCancelModal(false); setCancelReason(''); setCancelConfirmed(false); }}>Voltar</Button>
             <Button onClick={handleCancelSubscription} isLoading={isSubmitting} className="bg-yellow-500 text-black">Confirmar Cancelamento</Button>
           </div>
         </div>

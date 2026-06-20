@@ -25,15 +25,28 @@ export default function SuccessPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, email, plano, is_admin, created_at, subscription_status')
+        .select('id, email, plano, is_admin, created_at, subscription_status, subscription_ends_at')
         .eq('id', user.id)
         .single();
 
-      setHasProAccess(hasPremiumAccess(profile as any));
+      const pro = hasPremiumAccess(profile as any);
+      setHasProAccess(pro);
       setIsLoading(false);
+      return pro;
     }
 
-    checkStatus();
+    let pollCount = 0;
+    const maxPolls = 30;
+
+    async function pollAndCheck() {
+      const result = await checkStatus();
+      if (!result && pollCount < maxPolls) {
+        pollCount++;
+        setTimeout(pollAndCheck, 3000);
+      }
+    }
+
+    pollAndCheck();
   }, []);
 
   if (isLoading) {

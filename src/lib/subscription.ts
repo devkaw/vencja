@@ -2,7 +2,16 @@ import type { Profile } from '@/types';
 
 export function hasPremiumAccess(profile: Profile | null): boolean {
   if (!profile) return false;
-  return profile.plano === 'pro';
+  if (profile.plano !== 'pro') return false;
+
+  if (profile.subscription_ends_at) {
+    const endsAt = new Date(profile.subscription_ends_at);
+    if (endsAt < new Date()) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function canAccessFeature(profile: Profile | null, requiresPro: boolean): boolean {
