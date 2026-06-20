@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
         const price = order?.offer?.price ? Number(order.offer.price) : getPlanValue(order?.offer?.name || '');
         const nextBillingDate = getNextBillingDate(cycle);
 
-        await supabase.from('profiles').upsert({
+        const { error: profileUpdateError } = await supabase.from('profiles').upsert({
           id: userId,
           plano: 'pro',
           subscription_id: order.subscription || order.id,
@@ -226,7 +226,11 @@ export async function POST(request: NextRequest) {
           subscription_ends_at: nextBillingDate.toISOString(),
         });
 
-        await supabase.from('subscriptions').upsert({
+        if (profileUpdateError) {
+          console.error('[Cakto Webhook] ERRO ao atualizar profiles:', profileUpdateError);
+        }
+
+        const { error: subUpdateError } = await supabase.from('subscriptions').upsert({
           user_id: userId,
           subscription_id: order.subscription || order.id,
           plan_type: cycle,
@@ -235,6 +239,10 @@ export async function POST(request: NextRequest) {
           current_period_start: new Date().toISOString(),
           current_period_end: nextBillingDate.toISOString(),
         });
+
+        if (subUpdateError) {
+          console.error('[Cakto Webhook] ERRO ao atualizar subscriptions:', subUpdateError);
+        }
 
         await sendPaymentConfirmedEmail(
           order.customer.email,
@@ -252,16 +260,18 @@ export async function POST(request: NextRequest) {
         const price = order?.offer?.price ? Number(order.offer.price) : getPlanValue(order?.offer?.name || '');
         const nextBillingDate = getNextBillingDate(cycle);
 
-        await supabase.from('profiles').update({
+        const { error: e1 } = await supabase.from('profiles').update({
           subscription_status: 'active',
           subscription_ends_at: nextBillingDate.toISOString(),
         }).eq('id', userId);
+        if (e1) console.error('[Cakto Webhook] ERRO profiles update:', e1);
 
-        await supabase.from('subscriptions').update({
+        const { error: e2 } = await supabase.from('subscriptions').update({
           status: 'active',
           current_period_start: new Date().toISOString(),
           current_period_end: nextBillingDate.toISOString(),
         }).eq('subscription_id', order.subscription || order.id);
+        if (e2) console.error('[Cakto Webhook] ERRO subscriptions update:', e2);
 
         await sendRenewalConfirmedEmail(
           order.customer.email,
@@ -276,13 +286,15 @@ export async function POST(request: NextRequest) {
       }
 
       case 'subscription_renewal_refused': {
-        await supabase.from('profiles').update({
+        const { error: e1 } = await supabase.from('profiles').update({
           subscription_status: 'past_due',
         }).eq('id', userId);
+        if (e1) console.error('[Cakto Webhook] ERRO profiles update:', e1);
 
-        await supabase.from('subscriptions').update({
+        const { error: e2 } = await supabase.from('subscriptions').update({
           status: 'past_due',
         }).eq('subscription_id', order.subscription || order.id);
+        if (e2) console.error('[Cakto Webhook] ERRO subscriptions update:', e2);
 
         await sendPaymentRejectedEmail(
           order.customer.email,
@@ -300,15 +312,16 @@ export async function POST(request: NextRequest) {
         const endDateFormatted = currentEndDate.toLocaleDateString('pt-BR');
         
         if (currentEndDate > new Date()) {
-          await supabase.from('profiles').update({
+          const { error: e1 } = await supabase.from('profiles').update({
             subscription_status: 'canceled',
             cancellation_status: 'approved',
             cancellation_requested_at: null,
             cancellation_type: null,
             cancellation_reason: null,
           }).eq('id', userId);
+          if (e1) console.error('[Cakto Webhook] ERRO profiles update:', e1);
         } else {
-          await supabase.from('profiles').upsert({
+          const { error: e1 } = await supabase.from('profiles').upsert({
             id: userId,
             plano: 'free',
             subscription_status: 'canceled',
@@ -317,11 +330,13 @@ export async function POST(request: NextRequest) {
             cancellation_type: null,
             cancellation_reason: null,
           });
+          if (e1) console.error('[Cakto Webhook] ERRO profiles update:', e1);
 
-          await supabase.from('subscriptions').update({
+          const { error: e2 } = await supabase.from('subscriptions').update({
             status: 'canceled',
             canceled_at: new Date().toISOString(),
           }).eq('subscription_id', order.subscription || order.id);
+          if (e2) console.error('[Cakto Webhook] ERRO subscriptions update:', e2);
         }
 
         await sendSubscriptionCanceledEmail(
@@ -338,7 +353,7 @@ export async function POST(request: NextRequest) {
       case 'chargeback': {
         const price = order?.offer?.price ? Number(order.offer.price) : 49.90;
         
-        await supabase.from('profiles').upsert({
+        const { error: e1 } = await supabase.from('profiles').upsert({
           id: userId,
           plano: 'free',
           subscription_status: 'canceled',
@@ -347,11 +362,13 @@ export async function POST(request: NextRequest) {
           cancellation_type: null,
           cancellation_reason: null,
         });
+        if (e1) console.error('[Cakto Webhook] ERRO profiles update:', e1);
 
-        await supabase.from('subscriptions').update({
+        const { error: e2 } = await supabase.from('subscriptions').update({
           status: 'canceled',
           canceled_at: new Date().toISOString(),
         }).eq('subscription_id', order.subscription || order.id);
+        if (e2) console.error('[Cakto Webhook] ERRO subscriptions update:', e2);
 
         await sendRefundEmail(
           order.customer.email,
