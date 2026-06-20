@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     await sendCancellationRequestReceivedEmail(
       profile.email,
-      profile.full_name || profile.email.split('@')[0],
+      profile.email.split('@')[0],
       profile.subscription_cycle || 'monthly',
       endsAtDate
     );
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         subject: `Solicitação de cancelamento - ${profile.email}`,
         html: `
           <h2>Nova solicitação de cancelamento</h2>
-          <p><strong>Usuário:</strong> ${profile.full_name || 'Não informado'}</p>
+          <p><strong>Usuário:</strong> ${profile.email}</p>
           <p><strong>Email:</strong> ${profile.email}</p>
           <p><strong>Plano:</strong> ${profile.subscription_cycle === 'monthly' ? 'Pro Mensal' : 'Pro Anual'}</p>
           <p><strong>Valor:</strong> R$ ${profile.subscription_cycle === 'monthly' ? '49,90/mês' : '499,00/ano'}</p>

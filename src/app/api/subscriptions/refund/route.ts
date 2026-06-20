@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     await sendRefundRequestReceivedEmail(
       profile.email,
-      profile.full_name || profile.email.split('@')[0],
+      profile.email.split('@')[0],
       profile.subscription_cycle || 'monthly',
       price,
       daysRemaining
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         subject: `Solicitação de REEMBOLSO - ${profile.email} (${daysRemaining} dias restantes)`,
         html: `
           <h2>Nova solicitação de REEMBOLSO</h2>
-          <p><strong>Usuário:</strong> ${profile.full_name || 'Não informado'}</p>
+          <p><strong>Usuário:</strong> ${profile.email}</p>
           <p><strong>Email:</strong> ${profile.email}</p>
           <p><strong>Plano:</strong> ${profile.subscription_cycle === 'monthly' ? 'Pro Mensal' : 'Pro Anual'}</p>
           <p><strong>Valor:</strong> R$ ${price.toFixed(2).replace('.', ',')}</p>

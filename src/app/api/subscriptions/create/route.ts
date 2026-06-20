@@ -40,9 +40,7 @@ export async function POST(request: NextRequest) {
     const checkoutUrl = buildCheckoutUrl({
       offerId,
       customerEmail: user.email || '',
-      customerName: profile.full_name || user.email?.split('@')[0] || '',
-      customerCpf: profile.cpf || undefined,
-      customerPhone: profile.phone ? `55${profile.phone.replace(/\D/g, '')}` : undefined,
+      customerName: user.email?.split('@')[0] || '',
       returnUrl: `${appUrl}/dashboard/upgrade/success`,
       customId: user.id,
     });
