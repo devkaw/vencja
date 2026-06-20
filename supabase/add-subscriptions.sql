@@ -11,7 +11,11 @@ ADD COLUMN IF NOT EXISTS subscription_id TEXT,
 ADD COLUMN IF NOT EXISTS subscription_status TEXT CHECK (subscription_status IN ('active', 'canceled', 'past_due', 'unpaid', 'trialing')),
 ADD COLUMN IF NOT EXISTS subscription_cycle TEXT CHECK (subscription_cycle IN ('monthly', 'annual')),
 ADD COLUMN IF NOT EXISTS subscription_started_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS subscription_ends_at TIMESTAMPTZ;
+ADD COLUMN IF NOT EXISTS subscription_ends_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS cancellation_status TEXT CHECK (cancellation_status IN ('pending', 'approved', 'rejected')),
+ADD COLUMN IF NOT EXISTS cancellation_type TEXT CHECK (cancellation_type IN ('cancel', 'refund')),
+ADD COLUMN IF NOT EXISTS cancellation_requested_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
 
 -- 2. Criar tabela de subscriptions
 CREATE TABLE IF NOT EXISTS subscriptions (

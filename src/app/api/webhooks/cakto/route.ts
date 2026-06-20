@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import {
   sendPaymentConfirmedEmail,
   sendPaymentRejectedEmail,
@@ -7,6 +7,11 @@ import {
   sendRefundEmail,
   sendRenewalConfirmedEmail,
 } from '@/lib/email/payment-notifications';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 interface CaktoWebhookPayload {
   secret?: string;
@@ -143,7 +148,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const supabase = await createClient();
+    const supabase = supabaseAdmin;
     
     const eventKey = `${order.id}_${event}`;
     const { data: existingEvent } = await supabase
