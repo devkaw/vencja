@@ -8,7 +8,7 @@ const supabase = createSupabaseClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const { token } = await request.json();
+    const { token, newPassword } = await request.json();
 
     if (!token) {
       return NextResponse.json(
@@ -59,6 +59,28 @@ export async function POST(request: NextRequest) {
         console.error('Error confirming email:', updateError);
         return NextResponse.json(
           { error: 'Erro ao confirmar email' },
+          { status: 500 }
+        );
+      }
+    }
+
+    if (tokenData.type === 'reset') {
+      if (!newPassword || newPassword.length < 6) {
+        return NextResponse.json(
+          { error: 'Senha deve ter pelo menos 6 caracteres' },
+          { status: 400 }
+        );
+      }
+
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        tokenData.user_id,
+        { password: newPassword }
+      );
+
+      if (updateError) {
+        console.error('Error resetting password:', updateError);
+        return NextResponse.json(
+          { error: 'Erro ao redefinir senha' },
           { status: 500 }
         );
       }
