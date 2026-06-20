@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     if (subscriptionId) {
       const { data } = await supabase
         .from('profiles')
-        .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
+        .select('id, email, plano, subscription_ends_at, subscription_status, subscription_cycle')
         .eq('subscription_id', subscriptionId)
         .single();
       profile = data;
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     if (!profile && email) {
       const { data } = await supabase
         .from('profiles')
-        .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
+        .select('id, email, plano, subscription_ends_at, subscription_status, subscription_cycle')
         .eq('email', email.toLowerCase())
         .single();
       profile = data;
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     if (!profile) {
       const { data } = await supabase
         .from('profiles')
-        .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
+        .select('id, email, plano, subscription_ends_at, subscription_status, subscription_cycle')
         .eq('id', user.id)
         .single();
       profile = data;
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         refId: `TEST${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
         status: 'paid',
         customer: {
-          name: profile.full_name || 'Test User',
+          name: profile.email?.split('@')[0] || 'Test User',
           email: profile.email,
           docNumber: null,
         },

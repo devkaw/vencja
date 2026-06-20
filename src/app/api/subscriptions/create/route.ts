@@ -23,13 +23,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name, cpf, phone')
+      .select('*')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile) {
+    if (!profile) {
       return NextResponse.json({ error: 'Perfil não encontrado' }, { status: 404 });
     }
 

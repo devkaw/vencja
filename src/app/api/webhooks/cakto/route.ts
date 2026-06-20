@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
     if (order.subscription) {
       const result = await supabase
         .from('profiles')
-        .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
+        .select('id, email, plano, subscription_ends_at, subscription_status, subscription_cycle')
         .eq('subscription_id', order.subscription)
         .single();
       
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
       
       const result = await supabase
         .from('profiles')
-        .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
+        .select('id, email, plano, subscription_ends_at, subscription_status, subscription_cycle')
         .ilike('email', emailToSearch)
         .single();
       
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = profile.id;
-    const customerName = order.customer.name || profile.full_name || order.customer.email.split('@')[0];
+    const customerName = order.customer.name || order.customer.email.split('@')[0];
 
     switch (event) {
       case 'purchase_approved':
