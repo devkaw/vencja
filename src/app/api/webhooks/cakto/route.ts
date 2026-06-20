@@ -7,9 +7,9 @@ import {
   sendRefundEmail,
   sendRenewalConfirmedEmail,
 } from '@/lib/email/payment-notifications';
-import crypto from 'crypto';
 
 interface CaktoWebhookPayload {
+  secret?: string;
   event: string;
   data?: {
     id: string;
@@ -84,23 +84,17 @@ function normalizePayload(payload: CaktoWebhookPayload) {
   };
 }
 
-function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+function verifyWebhookSecret(payloadSecret: string | undefined): boolean {
   const secret = process.env.CAKTO_WEBHOOK_SECRET;
   if (!secret) {
     console.warn('[Cakto Webhook] CAKTO_WEBHOOK_SECRET not configured - skipping verification');
     return true;
   }
-  if (!signature) return false;
-  
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+  if (!payloadSecret) {
+    console.error('[Cakto Webhook] No secret in payload');
+    return false;
+  }
+  return payloadSecret === secret;
 }
 
 function getCycleFromOffer(offerName: string): 'monthly' | 'annual' {
@@ -132,14 +126,13 @@ function getNextBillingDate(cycle: 'monthly' | 'annual'): Date {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    const signature = request.headers.get('x-cakto-signature');
+    const payload: CaktoWebhookPayload = JSON.parse(body);
     
-    if (!verifyWebhookSignature(body, signature)) {
-      console.error('[Cakto Webhook] Invalid signature');
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    if (!verifyWebhookSecret(payload.secret)) {
+      console.error('[Cakto Webhook] Invalid secret');
+      return NextResponse.json({ error: 'Invalid secret' }, { status: 401 });
     }
 
-    const payload: CaktoWebhookPayload = JSON.parse(body);
     const { event } = payload;
     const order = normalizePayload(payload);
 
