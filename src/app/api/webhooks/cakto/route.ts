@@ -228,6 +228,7 @@ export async function POST(request: NextRequest) {
 
         const { error: profileUpdateError } = await supabase.from('profiles').upsert({
           id: userId,
+          email: order.customer.email.toLowerCase(),
           plano: 'pro',
           subscription_id: order.subscription || order.id,
           subscription_status: 'active',
@@ -333,6 +334,7 @@ export async function POST(request: NextRequest) {
         } else {
           const { error: e1 } = await supabase.from('profiles').upsert({
             id: userId,
+            email: order.customer.email.toLowerCase(),
             plano: 'free',
             subscription_status: 'canceled',
             cancellation_status: 'approved',
@@ -365,6 +367,7 @@ export async function POST(request: NextRequest) {
         
         const { error: e1 } = await supabase.from('profiles').upsert({
           id: userId,
+          email: order.customer.email.toLowerCase(),
           plano: 'free',
           subscription_status: 'canceled',
           cancellation_status: 'approved',
