@@ -186,16 +186,26 @@ export async function POST(request: NextRequest) {
     }
 
     if (!profile) {
+      const emailToSearch = order.customer.email.toLowerCase().trim();
+      
       const result = await supabase
         .from('profiles')
         .select('id, email, full_name, plano, subscription_ends_at, subscription_status, subscription_cycle')
-        .eq('email', order.customer.email.toLowerCase())
+        .ilike('email', emailToSearch)
         .single();
       
       if (!result.error && result.data) {
         profile = result.data;
-        console.log('[Cakto Webhook] Found user by email:', order.customer.email);
+        console.log('[Cakto Webhook] Found user by email:', emailToSearch);
       } else {
+        console.error('[Cakto Webhook] Email lookup failed:', result.error?.message, '| searched:', emailToSearch);
+        
+        const { data: allProfiles } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .limit(10);
+        console.error('[Cakto Webhook] Existing profiles in DB:', JSON.stringify(allProfiles?.map(p => p.email)));
+        
         profileError = result.error;
       }
     }
