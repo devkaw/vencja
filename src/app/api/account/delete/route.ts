@@ -18,6 +18,25 @@ export async function DELETE(_request: NextRequest) {
 
     const userId = user.id;
 
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('plano, subscription_status, subscription_ends_at')
+      .eq('id', userId)
+      .maybeSingle();
+
+    // Deleting the account doesn't stop billing at Cakto, so require the subscription to be canceled first.
+    const hasActiveSubscription =
+      profile?.plano === 'pro' &&
+      profile.subscription_status !== 'canceled' &&
+      (!profile.subscription_ends_at || new Date(profile.subscription_ends_at) > new Date());
+
+    if (hasActiveSubscription) {
+      return NextResponse.json(
+        { error: 'Cancele sua assinatura Pro em Configurações > Plano antes de excluir a conta.' },
+        { status: 409 }
+      );
+    }
+
     console.log('[Delete Account] Deleting user:', userId);
 
     const { error: deleteChargesError } = await supabaseAdmin
@@ -45,15 +64,6 @@ export async function DELETE(_request: NextRequest) {
 
     if (deletePaymentsError) {
       console.error('[Delete Account] Error deleting payments:', deletePaymentsError);
-    }
-
-    const { error: deletePaymentRequestsError } = await supabaseAdmin
-      .from('payment_requests')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deletePaymentRequestsError) {
-      console.error('[Delete Account] Error deleting payment requests:', deletePaymentRequestsError);
     }
 
     const { error: deleteProfileError } = await supabaseAdmin

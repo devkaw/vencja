@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { format, differenceInDays, parseISO, isAfter, isBefore, startOfMonth, endOfMonth, addMonths, addWeeks, subMonths, getMonth, getYear } from 'date-fns';
+import { format, differenceInDays, differenceInCalendarDays, parseISO, isAfter, isBefore, startOfMonth, endOfMonth, startOfToday, addMonths, addWeeks, subMonths, getMonth, getYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Charge } from '@/types';
 
@@ -38,20 +38,37 @@ export function formatDateFull(date: string | Date): string {
   return format(dateObj, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
 }
 
+// Due dates are calendar days ("YYYY-MM-DD"): a charge due today is not overdue yet.
+export function parseDateLocal(dataStr: string): Date {
+  return parseISO(dataStr.split('T')[0]);
+}
+
+export function diasAteVencimento(dataVencimento: string): number {
+  return differenceInCalendarDays(parseDateLocal(dataVencimento), startOfToday());
+}
+
 export function calcularDiasAtraso(dataVencimento: string): number {
-  const hoje = new Date();
-  const vencimento = parseISO(dataVencimento);
-  
-  if (isBefore(vencimento, hoje)) {
-    return differenceInDays(hoje, vencimento);
-  }
-  return 0;
+  return Math.max(0, -diasAteVencimento(dataVencimento));
 }
 
 export function isVencido(dataVencimento: string): boolean {
-  const hoje = new Date();
-  const vencimento = parseISO(dataVencimento);
-  return isBefore(vencimento, hoje);
+  return diasAteVencimento(dataVencimento) < 0;
+}
+
+function textoPrazo(dias: number): string {
+  if (dias <= 0) return 'hoje';
+  if (dias === 1) return 'amanhã';
+  return `em ${dias} dias`;
+}
+
+// Stored numbers may or may not carry the country code. 10/11 digits = DDD + number
+// (a DDD 55 number must still get +55); 12/13 digits already include it.
+export function normalizarTelefoneBR(telefone: string): string {
+  const digits = telefone.replace(/\D/g, '');
+  if (digits.length === 10 || digits.length === 11) {
+    return '55' + digits;
+  }
+  return digits;
 }
 
 export function isNoPrazo(dataVencimento: string): boolean {
@@ -160,8 +177,7 @@ Qualquer dúvida, estamos à disposição!
 Atenciosamente,
 ${remetente || 'VenceJa'}`;
   } else {
-    const diasParaVencer = Math.ceil((new Date(vencimento).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    const textoDias = diasParaVencer === 1 ? 'amanhã' : `em ${diasParaVencer} dias`;
+    const textoDias = textoPrazo(diasAteVencimento(vencimento));
     mensagem = `Olá ${nome}! Tudo bem?
 
 Temos uma cobrança${desc} no valor de ${formatCurrency(valor)} que vence ${textoDias} (${formatDate(vencimento)}).
@@ -174,12 +190,7 @@ Atenciosamente,
 ${remetente || 'VenceJa'}`;
   }
   
-  let telefoneFormatado = telefone.replace(/\D/g, '');
-  if (!telefoneFormatado.startsWith('55')) {
-    telefoneFormatado = '55' + telefoneFormatado;
-  }
-  
-  return `https://wa.me/${telefoneFormatado}?text=${encodeURIComponent(mensagem)}`;
+  return `https://wa.me/${normalizarTelefoneBR(telefone)}?text=${encodeURIComponent(mensagem)}`;
 }
 
 export function gerarLinkWhatsAppCobranca(nome: string, telefone: string, cobrancas: Array<{ valor: number; vencimento: string; status: string; descricao?: string }>, remetente?: string): string {
@@ -203,9 +214,8 @@ export function gerarLinkWhatsAppCobranca(nome: string, telefone: string, cobran
     const totalProximo = proximas.reduce((sum, c) => sum + c.valor, 0);
     mensagem += `E também temos vencimentos próximos:\n\n`;
     proximas.forEach((c) => {
-      const dias = Math.ceil((new Date(c.vencimento).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
       const desc = c.descricao ? ` (${c.descricao})` : '';
-      const textoDias = dias === 1 ? 'amanhã' : `em ${dias} dias`;
+      const textoDias = textoPrazo(diasAteVencimento(c.vencimento));
       mensagem += `• ${formatCurrency(c.valor)}${desc} - vence ${textoDias}\n`;
     });
     mensagem += `\nTotal próximo: ${formatCurrency(totalProximo)}\n\n`;
@@ -218,12 +228,7 @@ export function gerarLinkWhatsAppCobranca(nome: string, telefone: string, cobran
   
   mensagem += `Regularize suas pendências para continuar aproveitando nossos serviços sem interrupções.\n\nQualquer dúvida, estamos à disposição.\n\nAtenciosamente,\n${remetente || 'VenceJa'}`;
   
-  let telefoneFormatado = telefone.replace(/\D/g, '');
-  if (!telefoneFormatado.startsWith('55')) {
-    telefoneFormatado = '55' + telefoneFormatado;
-  }
-  
-  return `https://wa.me/${telefoneFormatado}?text=${encodeURIComponent(mensagem)}`;
+  return `https://wa.me/${normalizarTelefoneBR(telefone)}?text=${encodeURIComponent(mensagem)}`;
 }
 
 export function gerarLinkWhatsAppVarios(nome: string, telefone: string, cobrancas: Array<{ valor: number; vencimento: string; status: string; descricao?: string }>, remetente?: string): string {
@@ -255,12 +260,7 @@ export function gerarLinkWhatsAppVarios(nome: string, telefone: string, cobranca
   
   mensagem += `Regularize suas pendências para continuar aproveitando nossos serviços sem interrupções.\n\nQualquer dúvida, estamos à disposição.\n\nAtenciosamente,\n${remetente || 'VenceJa'}`;
   
-  let telefoneFormatado = telefone.replace(/\D/g, '');
-  if (!telefoneFormatado.startsWith('55')) {
-    telefoneFormatado = '55' + telefoneFormatado;
-  }
-  
-  return `https://wa.me/${telefoneFormatado}?text=${encodeURIComponent(mensagem)}`;
+  return `https://wa.me/${normalizarTelefoneBR(telefone)}?text=${encodeURIComponent(mensagem)}`;
 }
 
 export function slugify(text: string): string {
@@ -421,7 +421,7 @@ export function calculateProjection(charges: Charge[], meses: number = 6): Array
     
     const aVencer = chargesPendentes
       .filter(c => {
-        const vencimento = new Date(c.data_vencimento);
+        const vencimento = parseDateLocal(c.data_vencimento);
         return vencimento >= inicio && vencimento <= fim;
       })
       .reduce((sum, c) => sum + Number(c.valor), 0);
@@ -465,4 +465,13 @@ export function getAtrasoNoMes(charges: Charge[], dataReferencia: Date): number 
       return isBefore(vencimento, fim) && isAfter(vencimento, mesAnterior);
     })
     .reduce((sum, c) => sum + Number(c.valor), 0);
+}
+
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/client';
+import { escapeHtml } from '@/lib/utils';
 import { Resend } from 'resend';
 import { sendRefundRequestReceivedEmail } from '@/lib/email/payment-notifications';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contato@vencja.com.br';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contato@venceja.com.br';
 
 interface Request {
   reason: string;
@@ -46,9 +48,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Você já possui uma solicitação pendente' }, { status: 400 });
     }
 
-    const purchasedAt = profile.subscription_started_at 
-      ? new Date(profile.subscription_started_at) 
-      : new Date();
+    if (!profile.subscription_started_at) {
+      return NextResponse.json({ eligible: false, error: 'Data da compra não encontrada. Entre em contato pelo email.', reason: 'Data da compra não encontrada' }, { status: 400 });
+    }
+    const purchasedAt = new Date(profile.subscription_started_at);
     
     const now = new Date();
     const diffTime = now.getTime() - purchasedAt.getTime();
@@ -63,12 +66,17 @@ export async function POST(request: NextRequest) {
 
     const price = profile.subscription_cycle === 'monthly' ? 49.90 : 499.00;
 
-    await supabase.from('profiles').update({
+    const { error: updateError } = await createAdminClient().from('profiles').update({
       cancellation_requested_at: new Date().toISOString(),
       cancellation_type: 'refund',
-      cancellation_reason: reason,
+      cancellation_reason: String(reason).slice(0, 1000),
       cancellation_status: 'pending',
     }).eq('id', user.id);
+
+    if (updateError) {
+      console.error('[Subscription request] Update error:', updateError.message);
+      return NextResponse.json({ error: 'Erro ao registrar solicitação' }, { status: 500 });
+    }
 
     await sendRefundRequestReceivedEmail(
       profile.email,
@@ -92,7 +100,7 @@ export async function POST(request: NextRequest) {
           <p><strong>Data da compra:</strong> ${purchasedAt.toLocaleDateString('pt-BR')}</p>
           <p><strong>Dias desde a compra:</strong> ${diffDays} dias</p>
           <p><strong>Prazo restante para reembolso:</strong> ${daysRemaining} dias</p>
-          <p><strong>Motivo:</strong> ${reason}</p>
+          <p><strong>Motivo:</strong> ${escapeHtml(String(reason))}</p>
           <hr>
           <h3>Ação necessária:</h3>
           <p><strong>Dentro do prazo (7 dias):</strong> Vá ao painel Cakto → Pedidos → Encontrar o pedido → Reembolsar</p>
@@ -147,9 +155,10 @@ export async function GET() {
       });
     }
 
-    const purchasedAt = profile.subscription_started_at 
-      ? new Date(profile.subscription_started_at) 
-      : new Date();
+    if (!profile.subscription_started_at) {
+      return NextResponse.json({ eligible: false, error: 'Data da compra não encontrada. Entre em contato pelo email.', reason: 'Data da compra não encontrada' }, { status: 400 });
+    }
+    const purchasedAt = new Date(profile.subscription_started_at);
     
     const now = new Date();
     const diffTime = now.getTime() - purchasedAt.getTime();

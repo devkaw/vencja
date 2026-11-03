@@ -49,11 +49,7 @@ export default function AuthCallbackContent() {
           if (!profile) {
             await supabase.from('profiles').insert({
               id: user.id,
-              email: user.email || '',
-              plano: 'free',
-              acesso_vitalicio: false,
-              status_pagamento: 'pendente',
-              is_admin: false,
+              email: (user.email || '').toLowerCase(),
             });
           }
 

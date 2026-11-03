@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 import { hasPremiumAccess } from '@/lib/subscription';
+import { normalizarTelefoneBR } from '@/lib/utils';
 import type { Profile } from '@/types';
 
 export default function NewClientPage() {
@@ -72,10 +73,7 @@ export default function NewClientPage() {
       return;
     }
 
-    let telefoneFormatado = formData.telefone.replace(/\D/g, '');
-    if (telefoneFormatado && !telefoneFormatado.startsWith('55')) {
-      telefoneFormatado = '55' + telefoneFormatado;
-    }
+    const telefoneFormatado = formData.telefone.trim() ? normalizarTelefoneBR(formData.telefone) : '';
 
     const { error } = await supabase
       .from('clients')

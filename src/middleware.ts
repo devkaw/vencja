@@ -14,7 +14,6 @@ export async function middleware(request: NextRequest) {
     '/help',
     '/termos',
     '/privacidade',
-    '/api/debug-email',
     '/sitemap.xml',
     '/robots.txt',
   ];
@@ -76,6 +75,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|apple-touch-icon.*\\.png|.*\\.(?:svg|xml|txt|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|monitoring|_next/static|_next/image|favicon.ico|apple-touch-icon.*\\.png|.*\\.(?:svg|xml|txt|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

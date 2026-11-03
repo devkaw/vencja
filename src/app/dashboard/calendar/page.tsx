@@ -23,7 +23,7 @@ interface ChargeDay {
     status: 'pago' | 'pendente';
     data_vencimento: string;
     data_pagamento?: string;
-    data_criacao: string;
+    created_at: string;
     descricao: string;
     client: { nome: string };
     tipo: 'pago' | 'criado' | 'vencido' | 'pendente';
@@ -73,23 +73,21 @@ export default function CalendarPage() {
 
       const chargesPorDia = diasIntervalo.map(dia => {
         const chargesNoDia = allCharges.filter(c => {
-          const dataC = toLocalDate(c.data_criacao);
+          const dataC = new Date(c.created_at);
           const dataV = toLocalDate(c.data_vencimento);
           const dataP = c.data_pagamento ? toLocalDate(c.data_pagamento) : null;
           return isSameDay(dataC, dia) || isSameDay(dataV, dia) || (dataP && isSameDay(dataP, dia));
         });
 
-        const pagosNoDia = chargesNoDia.filter(c => c.data_pagamento && isSameDay(toLocalDate(c.data_pagamento), dia)).map(c => ({ ...c, tipo: 'pago' as const }));
-        const criadosNoDia = chargesNoDia.filter(c => isSameDay(toLocalDate(c.data_criacao), dia)).map(c => ({ ...c, tipo: 'criado' as const }));
+        const pagosNoDia = chargesNoDia.filter(c => c.status === 'pago' && c.data_pagamento && isSameDay(toLocalDate(c.data_pagamento), dia)).map(c => ({ ...c, tipo: 'pago' as const }));
+        const criadosNoDia = chargesNoDia.filter(c => isSameDay(new Date(c.created_at), dia)).map(c => ({ ...c, tipo: 'criado' as const }));
         const vencidosNoDia = chargesNoDia.filter(c => {
           const dataV = toLocalDate(c.data_vencimento);
-          const dataP = c.data_pagamento ? toLocalDate(c.data_pagamento) : null;
-          return isSameDay(dataV, dia) && (!dataP || !isSameDay(dataP, dia)) && isVencido(c.data_vencimento);
+          return c.status !== 'pago' && isSameDay(dataV, dia) && isVencido(c.data_vencimento);
         }).map(c => ({ ...c, tipo: 'vencido' as const }));
         const pendentesNoDia = chargesNoDia.filter(c => {
           const dataV = toLocalDate(c.data_vencimento);
-          const dataP = c.data_pagamento ? toLocalDate(c.data_pagamento) : null;
-          return isSameDay(dataV, dia) && (!dataP || !isSameDay(dataP, dia)) && !isVencido(c.data_vencimento);
+          return c.status !== 'pago' && isSameDay(dataV, dia) && !isVencido(c.data_vencimento);
         }).map(c => ({ ...c, tipo: 'pendente' as const }));
 
         const todasChargesDia = [...pagosNoDia, ...criadosNoDia, ...vencidosNoDia, ...pendentesNoDia];

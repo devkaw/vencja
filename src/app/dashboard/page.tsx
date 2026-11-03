@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import { formatCurrency, formatDate, calcularDiasAtraso, isVencido } from '@/lib/utils';
+import { formatCurrency, formatDate, calcularDiasAtraso, isVencido, diasAteVencimento } from '@/lib/utils';
 import { 
   TrendingUp, AlertTriangle, Clock, DollarSign, Users, Receipt, CheckCircle, BarChart3, ChevronRight, Zap, Target, 
   Activity, ArrowRight, Plus, Search, Filter, Download, Grid, List, MoreHorizontal, Trash2, Edit, Eye, X, Check, AlertOctagon,
@@ -67,7 +67,7 @@ export default function DashboardPage() {
       const atrasoNoMes = allCharges
         .filter(c => c.status === 'pendente' && isVencido(c.data_vencimento))
         .filter(c => {
-          const vencimento = new Date(c.data_vencimento);
+          const vencimento = parseDateLocal(c.data_vencimento);
           return vencimento.getMonth() === mesAtual && vencimento.getFullYear() === anoAtual;
         })
         .reduce((sum, c) => sum + Number(c.valor), 0);
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         atrasoTotal,
         atrasoNoMes,
         allCharges,
-        chargesProximasVencer: allCharges.filter(c => c.status === 'pendente' && !isVencido(c.data_vencimento)).sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime()).slice(0, 5),
+        chargesProximasVencer: allCharges.filter(c => c.status === 'pendente' && !isVencido(c.data_vencimento)).sort((a, b) => parseDateLocal(a.data_vencimento).getTime() - parseDateLocal(b.data_vencimento).getTime()).slice(0, 5),
         chargesRecentes: allCharges.slice(0, 8),
         topDevedores: clients.filter(c => Number(c.total_atrasado) > 0).slice(0, 5),
         chargesChartData,
@@ -192,7 +192,7 @@ export default function DashboardPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         <motion.div variants={fadeIn} className="lg:col-span-2">
           <GlassCard title="Atividade Recente" icon={Activity} href="/dashboard/charges">
-            {chargesRecentes.length === 0 ? <EmptyState message="Nenhuma cobrança еще" /> : 
+            {chargesRecentes.length === 0 ? <EmptyState message="Nenhuma cobrança ainda" /> : 
               chargesRecentes.map((charge: any) => {
                 const vencido = isVencido(charge.data_vencimento) && charge.status === 'pendente';
                 return (
@@ -212,11 +212,11 @@ export default function DashboardPage() {
           <GlassCard title="Próximas a Vencer" icon={Clock}>
             {chargesProximasVencer.length === 0 ? <EmptyState message="Nenhuma cobrança" /> :
               chargesProximasVencer.map((charge: any) => {
-                const diasUntil = Math.ceil((new Date(charge.data_vencimento).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                const diasUntil = diasAteVencimento(charge.data_vencimento);
                 return (
                   <Link key={charge.id} href={`/dashboard/charges/${charge.id}`} className="flex items-center justify-between p-4 hover:bg-white/5 transition-all">
                     <div><p className="font-light">{charge.client?.nome || 'Cliente'}</p><p className="text-xs text-slate-500">{formatDate(charge.data_vencimento)}</p></div>
-                    <div className="text-right"><p className="font-light">{formatCurrency(Number(charge.valor))}</p><Badge variant={diasUntil <= 1 ? 'warning' : 'default'} className="text-xs">{diasUntil === 1 ? 'amanhã' : `${diasUntil} dias`}</Badge></div>
+                    <div className="text-right"><p className="font-light">{formatCurrency(Number(charge.valor))}</p><Badge variant={diasUntil <= 1 ? 'warning' : 'default'} className="text-xs">{diasUntil === 0 ? 'hoje' : diasUntil === 1 ? 'amanhã' : `${diasUntil} dias`}</Badge></div>
                   </Link>
                 );
               })}

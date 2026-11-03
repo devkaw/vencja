@@ -5,7 +5,7 @@ import { AlertTriangle, Sparkles, DollarSign, Clock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DashboardSkeleton } from '@/components/ui/skeleton';
-import { formatCurrency, calcularDiasAtraso } from '@/lib/utils';
+import { formatCurrency, calcularDiasAtraso, isVencido } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import type { Client } from '@/types';
 
@@ -39,7 +39,6 @@ export default function RankingPage() {
 
       const clients = clientsData || [];
       const rankingData: ClientRanking[] = [];
-      const hoje = new Date();
 
       for (const client of clients) {
         const { data: charges } = await supabase
@@ -49,7 +48,7 @@ export default function RankingPage() {
 
         const chargesData = charges || [];
         
-        const atrasados = chargesData.filter((c: any) => c.status === 'pendente' && new Date(c.data_vencimento) < hoje);
+        const atrasados = chargesData.filter((c: any) => c.status === 'pendente' && isVencido(c.data_vencimento));
         
         if (atrasados.length > 0) {
           const totalAtrasado = atrasados.reduce((sum: number, c: any) => sum + Number(c.valor), 0);

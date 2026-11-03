@@ -22,10 +22,11 @@ export interface CaktoCheckoutUrlParams {
   customerPhone?: string;
   returnUrl?: string;
   customId?: string;
+  callback?: string;
 }
 
 export function buildCheckoutUrl(params: CaktoCheckoutUrlParams): string {
-  const { offerId, customerEmail, customerName, customerCpf, customerPhone, returnUrl, customId } = params;
+  const { offerId, customerEmail, customerName, customerCpf, customerPhone, returnUrl, customId, callback } = params;
   
   const url = new URL(`${CAKTO_CHECKOUT_BASE}/${offerId}`);
   
@@ -52,6 +53,11 @@ export function buildCheckoutUrl(params: CaktoCheckoutUrlParams): string {
   
   if (customId) {
     url.searchParams.set('custom_id', customId);
+  }
+
+  // Cakto echoes this token back as data.callback in every webhook for the order.
+  if (callback) {
+    url.searchParams.set('callback', callback);
   }
   
   return url.toString();

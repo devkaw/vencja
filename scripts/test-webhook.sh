@@ -6,7 +6,7 @@
 # Este script testa todos os cenários do webhook
 # sem apagar dados reais. Use em ambiente de teste.
 
-APP_URL="${NEXT_PUBLIC_APP_URL:-https://venceja.com.br}"
+APP_URL="${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
 WEBHOOK_URL="$APP_URL/api/webhooks/cakto"
 
 echo "=========================================="

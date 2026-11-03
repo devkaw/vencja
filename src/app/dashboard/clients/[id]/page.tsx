@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Modal } from '@/components/ui/modal';
-import { formatCurrency, formatDate, formatPhone, calcularDiasAtraso, isVencido, gerarLinkWhatsAppCobranca, calcularScore } from '@/lib/utils';
+import { formatCurrency, formatDate, formatPhone, calcularDiasAtraso, isVencido, gerarLinkWhatsAppCobranca, calcularScore, normalizarTelefoneBR, diasAteVencimento } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 import { hasPremiumAccess } from '@/lib/subscription';
@@ -79,13 +79,13 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         .eq('id', resolvedParams.id)
         .single();
 
-      setClient(clientAtualizado?.data || clientRes.data);
+      setClient(clientAtualizado || clientRes.data);
       setCharges(allCharges);
       setUserName(user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'VenceJa');
       setEditForm({
-        nome: clientAtualizado?.data?.nome || clientRes.data.nome,
-        email: clientAtualizado?.data?.email || clientRes.data.email || '',
-        telefone: clientAtualizado?.data?.telefone || clientRes.data.telefone || '',
+        nome: clientAtualizado?.nome || clientRes.data.nome,
+        email: clientAtualizado?.email || clientRes.data.email || '',
+        telefone: clientAtualizado?.telefone || clientRes.data.telefone || '',
       });
       setIsEditing(shouldEdit);
       setIsLoading(false);
@@ -97,10 +97,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
   const handleSaveEdit = async () => {
     if (!client) return;
 
-    let telefoneFormatado = editForm.telefone.replace(/\D/g, '');
-    if (telefoneFormatado && !telefoneFormatado.startsWith('55')) {
-      telefoneFormatado = '55' + telefoneFormatado;
-    }
+    const telefoneFormatado = editForm.telefone.trim() ? normalizarTelefoneBR(editForm.telefone) : '';
 
     const { error } = await supabase
       .from('clients')
@@ -164,8 +161,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
   
   const chargesToCobrar = unpaidCharges.filter(c => {
     if (isVencido(c.data_vencimento)) return true;
-    const daysUntil = Math.ceil((new Date(c.data_vencimento).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return daysUntil <= 3;
+    return diasAteVencimento(c.data_vencimento) <= 3;
   });
 
   return (

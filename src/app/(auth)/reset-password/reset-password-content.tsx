@@ -53,7 +53,7 @@ export default function ResetPasswordContent() {
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, newPassword: password }),
       });
 
       const data = await response.json();
@@ -61,24 +61,6 @@ export default function ResetPasswordContent() {
       if (!response.ok) {
         setStatus('error');
         setMessage(data.error || 'Link expirado ou inválido');
-        setIsSubmitting(false);
-        return;
-      }
-
-      const supabaseResponse = await fetch('/api/auth/update-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: data.userId,
-          password 
-        }),
-      });
-
-      const passwordResult = await supabaseResponse.json();
-
-      if (!supabaseResponse.ok) {
-        setStatus('error');
-        setMessage(passwordResult.error || 'Erro ao redefinir senha');
         setIsSubmitting(false);
         return;
       }

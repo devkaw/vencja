@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { Select } from '@/components/ui/select';
-import { formatCurrency, formatDate, calcularDiasAtraso, isVencido } from '@/lib/utils';
+import { formatCurrency, formatDate, calcularDiasAtraso, isVencido, parseDateLocal } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { hasPremiumAccess, PLANS } from '@/lib/subscription';
 import type { Charge, Profile } from '@/types';
@@ -57,7 +57,7 @@ export default function ChargesPage() {
       return matchesSearch && matchesStatus;
     }).sort((a, b) => {
       let comparison = 0;
-      if (sortBy === 'data_vencimento') comparison = new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime();
+      if (sortBy === 'data_vencimento') comparison = parseDateLocal(a.data_vencimento).getTime() - parseDateLocal(b.data_vencimento).getTime();
       else if (sortBy === 'valor') comparison = Number(a.valor) - Number(b.valor);
       else comparison = (a.client?.nome || '').localeCompare(b.client?.nome || '');
       return sortOrder === 'asc' ? comparison : -comparison;

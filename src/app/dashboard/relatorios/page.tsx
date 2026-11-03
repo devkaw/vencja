@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Download, DollarSign, Receipt, Users, AlertTriangle, TrendingUp, TrendingDown, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, formatDate, isVencido } from '@/lib/utils';
+import { formatCurrency, formatDate, isVencido, calcularDiasAtraso, parseDateLocal } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { hasPremiumAccess } from '@/lib/subscription';
 import type { Charge, Profile } from '@/types';
@@ -68,7 +68,7 @@ export default function RelatoriosPage() {
       const mesLabel = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
       
       const monthCharges = charges.filter(c => {
-        const d = new Date(c.data_vencimento);
+        const d = parseDateLocal(c.data_vencimento);
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === mesKey;
       });
       
@@ -91,10 +91,10 @@ export default function RelatoriosPage() {
   };
 
   const getYearlySummary = () => {
-    const years = [...new Set(charges.map(c => new Date(c.data_vencimento).getFullYear()))].sort();
+    const years = [...new Set(charges.map(c => parseDateLocal(c.data_vencimento).getFullYear()))].sort();
     
     return years.map(year => {
-      const yearCharges = charges.filter(c => new Date(c.data_vencimento).getFullYear() === year);
+      const yearCharges = charges.filter(c => parseDateLocal(c.data_vencimento).getFullYear() === year);
       const pagas = yearCharges.filter(c => c.status === 'pago');
       const pendentes = yearCharges.filter(c => c.status === 'pendente' && !isVencido(c.data_vencimento));
       const atrasadas = yearCharges.filter(c => c.status === 'pendente' && isVencido(c.data_vencimento));
@@ -115,10 +115,9 @@ export default function RelatoriosPage() {
 
   const getInadimplentes = () => {
     const clientMap = new Map<string, { client: any; totalAtrasado: number; quantidadeAtrasos: number; mediaDiasAtraso: number; charges: any[] }>();
-    const hoje = new Date();
 
     charges.forEach(c => {
-      if (c.status === 'pendente' && new Date(c.data_vencimento) < hoje) {
+      if (c.status === 'pendente' && isVencido(c.data_vencimento)) {
         if (!clientMap.has(c.client_id)) {
           clientMap.set(c.client_id, {
             client: c.client,
@@ -131,7 +130,7 @@ export default function RelatoriosPage() {
         const data = clientMap.get(c.client_id)!;
         data.quantidadeAtrasos++;
         data.totalAtrasado += Number(c.valor);
-        const diasAtrasoCalc = Math.floor((hoje.getTime() - new Date(c.data_vencimento).getTime()) / (1000 * 60 * 60 * 24));
+        const diasAtrasoCalc = calcularDiasAtraso(c.data_vencimento);
         data.charges.push({ ...c, dias_atraso: diasAtrasoCalc });
       }
     });

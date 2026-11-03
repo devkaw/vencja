@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
+import { differenceInCalendarDays, format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, MessageSquare, Clock, Edit, Trash2, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
-import { formatCurrency, formatDate, formatPhone, calcularDiasAtraso, isVencido, gerarLinkWhatsApp, gerarProximoVencimento, calcularScore } from '@/lib/utils';
+import { formatCurrency, formatDate, formatPhone, calcularDiasAtraso, isVencido, gerarLinkWhatsApp, calcularScore } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 import { hasPremiumAccess, canUsePartialPayment } from '@/lib/subscription';
@@ -23,7 +24,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
   const [userName, setUserName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [markAsPaidModal, setMarkAsPaidModal] = useState(false);
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate, setPaymentDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [partialPaymentAmount, setPartialPaymentAmount] = useState<string>('');
   const [isPartialPayment, setIsPartialPayment] = useState(false);
   const [editModal, setEditModal] = useState(false);
@@ -35,6 +36,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
     data_vencimento: '',
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const { addToast } = useAppStore();
@@ -83,144 +85,114 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
   }, [resolvedParams.id]);
 
   const handleMarkAsPaid = async () => {
-    if (!charge || !client) return;
+    if (!charge || !client || isPaying) return;
 
-    const diasAtraso = isVencido(charge.data_vencimento) 
-      ? calcularDiasAtraso(charge.data_vencimento) 
-      : 0;
-
-    const valorOriginal = Number(charge.valor) - Number(charge.valor_pago || 0);
+    const valorPendente = Number(charge.valor) - Number(charge.valor_pago || 0);
     const valorRecebido = isPartialPayment && canUsePartialPayment(profile)
-      ? parseFloat(partialPaymentAmount)
-      : valorOriginal;
+      ? Math.round(parseFloat(partialPaymentAmount) * 100) / 100
+      : valorPendente;
 
     if (isNaN(valorRecebido) || valorRecebido <= 0) {
       addToast('error', 'Valor inválido');
       return;
     }
 
-    if (valorRecebido > valorOriginal) {
+    if (valorRecebido > valorPendente) {
       addToast('error', 'Valor não pode exceder o valor pendente');
       return;
     }
 
-    const ehPagamentoParcial = valorRecebido < valorOriginal;
-    const novoValorPago = Number(charge.valor_pago || 0) + valorRecebido;
-    const novoValorRestante = valorOriginal - valorRecebido;
-
-    if (ehPagamentoParcial) {
-      const chargeJaParcial = charge.status === 'parcial';
-
-      if (chargeJaParcial) {
-        const { error: updateError } = await supabase
-          .from('charges')
-          .update({
-            valor_pago: novoValorPago,
-            status: novoValorRestante === 0 ? 'pago' : 'parcial',
-            data_pagamento: novoValorRestante === 0 ? paymentDate : undefined,
-            dias_atraso: novoValorRestante === 0 ? diasAtraso : undefined,
-          })
-          .eq('id', charge.id);
-
-        if (updateError) {
-          addToast('error', 'Erro ao registrar pagamento');
-          return;
-        }
-      } else {
-        await supabase.from('charges').delete().eq('id', charge.id);
-
-        const { data: paidCharge, error: paidChargeError } = await supabase
-          .from('charges')
-          .insert({
-            user_id: charge.user_id,
-            client_id: charge.client_id,
-            valor: valorRecebido,
-            valor_pago: valorRecebido,
-            data_vencimento: charge.data_vencimento,
-            data_pagamento: paymentDate,
-            status: 'pago',
-            descricao: `${charge.descricao || 'Cobrança'} (parcial)`,
-            recorrente: false,
-            periodicidade: null,
-            dias_atraso: 0,
-          })
-          .select()
-          .single();
-
-        if (paidChargeError) {
-          addToast('error', 'Erro ao criar cobrança paga');
-          return;
-        }
-
-        await supabase.from('payments').insert({
-          user_id: charge.user_id,
-          charge_id: paidCharge.id,
-          valor: valorRecebido,
-          data_pagamento: paymentDate,
-        });
-
-        if (novoValorRestante > 0) {
-          await supabase.from('charges').insert({
-            user_id: charge.user_id,
-            client_id: charge.client_id,
-            valor: novoValorRestante,
-            valor_pago: 0,
-            data_vencimento: charge.data_vencimento,
-            status: 'pendente',
-            descricao: `${charge.descricao || 'Cobrança'} (restante)`,
-            recorrente: charge.recorrente,
-            periodicidade: charge.recorrente ? charge.periodicidade : null,
-          });
-        }
-      }
-
-      await supabase
-        .from('clients')
-        .update({
-          total_pago: Number(client.total_pago) + valorRecebido,
-          total_atrasado: Math.max(0, Number(client.total_atrasado) - valorRecebido),
-        })
-        .eq('id', client.id);
-
-      addToast('success', `Pagamento parcial de ${formatCurrency(valorRecebido)} registrado!`);
-    } else {
-      const { error: chargeError } = await supabase
-        .from('charges')
-        .update({
-          status: 'pago',
-          valor_pago: novoValorPago,
-          data_pagamento: paymentDate,
-          dias_atraso: diasAtraso,
-        })
-        .eq('id', charge.id);
-
-      if (chargeError) {
-        addToast('error', 'Erro ao marcar como pago');
-        return;
-      }
-
-      await supabase.from('payments').insert({
-        user_id: charge.user_id,
-        charge_id: charge.id,
-        valor: valorRecebido,
-        data_pagamento: paymentDate,
-      });
-
-      await supabase
-        .from('clients')
-        .update({
-          total_pago: Number(client.total_pago) + valorRecebido,
-          total_atrasado: Math.max(0, Number(client.total_atrasado) - valorRecebido),
-        })
-        .eq('id', client.id);
+    if (!paymentDate) {
+      addToast('error', 'Informe a data do pagamento');
+      return;
     }
 
-    await recalcularCliente(client.id);
+    setIsPaying(true);
 
+    const diasAtraso = Math.max(0, differenceInCalendarDays(parseISO(paymentDate), parseISO(charge.data_vencimento)));
+    const ehPagamentoParcial = valorRecebido < valorPendente;
+    const valorJaPago = Number(charge.valor_pago || 0);
+    let restanteId: string | null = null;
+
+    if (ehPagamentoParcial) {
+      // Create the remainder first: if anything fails afterwards it is removed again,
+      // so the original charge is never lost.
+      const { data: restante, error: restanteError } = await supabase
+        .from('charges')
+        .insert({
+          user_id: charge.user_id,
+          client_id: charge.client_id,
+          valor: Math.round((valorPendente - valorRecebido) * 100) / 100,
+          valor_pago: 0,
+          data_vencimento: charge.data_vencimento,
+          status: 'pendente',
+          descricao: `${charge.descricao || 'Cobrança'} (restante)`,
+          recorrente: charge.recorrente,
+          periodicidade: charge.recorrente ? charge.periodicidade : null,
+          charge_original_id: charge.charge_original_id || charge.id,
+        })
+        .select('id')
+        .single();
+
+      if (restanteError || !restante) {
+        addToast('error', 'Erro ao registrar pagamento parcial');
+        setIsPaying(false);
+        return;
+      }
+      restanteId = restante.id;
+    }
+
+    // The status guard makes a second submit a no-op instead of a duplicate payment.
+    const { data: updated, error: chargeError } = await supabase
+      .from('charges')
+      .update(ehPagamentoParcial
+        ? {
+            valor: valorJaPago + valorRecebido,
+            valor_pago: valorJaPago + valorRecebido,
+            status: 'pago',
+            data_pagamento: paymentDate,
+            dias_atraso: diasAtraso,
+            descricao: `${charge.descricao || 'Cobrança'} (parcial)`,
+          }
+        : {
+            valor_pago: Number(charge.valor),
+            status: 'pago',
+            data_pagamento: paymentDate,
+            dias_atraso: diasAtraso,
+          })
+      .eq('id', charge.id)
+      .neq('status', 'pago')
+      .select('*')
+      .maybeSingle();
+
+    if (chargeError || !updated) {
+      if (restanteId) {
+        await supabase.from('charges').delete().eq('id', restanteId);
+      }
+      addToast('error', chargeError ? 'Erro ao registrar pagamento' : 'Esta cobrança já estava paga');
+      setIsPaying(false);
+      setMarkAsPaidModal(false);
+      return;
+    }
+
+    await supabase.from('payments').insert({
+      user_id: charge.user_id,
+      charge_id: charge.id,
+      valor: valorRecebido,
+      data_pagamento: paymentDate,
+    });
+
+    const clienteAtualizado = await recalcularCliente(client.id);
+
+    setCharge(updated);
+    if (clienteAtualizado) setClient(clienteAtualizado);
     setMarkAsPaidModal(false);
     setIsPartialPayment(false);
     setPartialPaymentAmount('');
-    router.refresh();
+    setIsPaying(false);
+    addToast('success', ehPagamentoParcial
+      ? `Pagamento parcial de ${formatCurrency(valorRecebido)} registrado! O restante virou uma nova cobrança.`
+      : 'Pagamento registrado!');
   };
 
   const handleOpenEditModal = () => {
@@ -233,7 +205,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
     setEditModal(true);
   };
 
-  const recalcularCliente = async (clientId: string) => {
+  const recalcularCliente = async (clientId: string): Promise<Client | null> => {
     const { data: allCharges } = await supabase
       .from('charges')
       .select('*')
@@ -247,21 +219,26 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
       const valorPendente = Number(c.valor) - Number(c.valor_pago || 0);
       return sum + valorPendente;
     }, 0);
+    const totalPago = (allCharges || []).reduce((sum: number, c: any) => sum + Number(c.valor_pago || 0), 0);
     const novoScore = calcularScore(allCharges || []);
 
-    await supabase
+    const { data } = await supabase
       .from('clients')
       .update({
         total_atrasado: totalAtrasado,
+        total_pago: totalPago,
         score: novoScore,
       })
-      .eq('id', clientId);
+      .eq('id', clientId)
+      .select('*')
+      .maybeSingle();
+
+    return data;
   };
 
   const handleEditCharge = async () => {
     if (!charge) return;
     
-    const valorAntigo = Number(charge.valor);
     const valorNovo = parseFloat(editForm.valor);
     
     if (isNaN(valorNovo) || valorNovo <= 0) {
@@ -282,36 +259,28 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
       data_vencimento: editForm.data_vencimento,
     };
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('charges')
       .update(updateData)
-      .eq('id', charge.id);
+      .eq('id', charge.id)
+      .select('*')
+      .single();
 
-    if (error) {
+    if (error || !updated) {
       addToast('error', 'Erro ao editar cobrança');
       setIsSaving(false);
       return;
     }
 
-    if (client && valorAntigo !== valorNovo) {
-      const diferenca = valorNovo - valorAntigo;
-      await supabase
-        .from('clients')
-        .update({
-          total_atrasado: Math.max(0, Number(client.total_atrasado) + diferenca),
-        })
-        .eq('id', client.id);
+    setCharge(updated);
+    if (client) {
+      const clienteAtualizado = await recalcularCliente(client.id);
+      if (clienteAtualizado) setClient(clienteAtualizado);
     }
 
     addToast('success', 'Cobrança editada com sucesso!');
     setEditModal(false);
     setIsSaving(false);
-
-    if (client) {
-      await recalcularCliente(client.id);
-    }
-    
-    router.refresh();
   };
 
   const handleDeleteCharge = async () => {
@@ -330,28 +299,6 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
       return;
     }
 
-    const updateData: any = {};
-    const valorJaPago = Number(charge.valor_pago || 0);
-    const valorPendenteExclusao = Number(charge.valor) - valorJaPago;
-
-    if (charge.status === 'pago' || charge.status === 'parcial') {
-      if (valorJaPago > 0) {
-        updateData.total_pago = Math.max(0, Number(client.total_pago) - valorJaPago);
-      }
-      if (valorPendenteExclusao > 0 && isVencido(charge.data_vencimento)) {
-        updateData.total_atrasado = Math.max(0, Number(client.total_atrasado) - valorPendenteExclusao);
-      }
-    } else if (isVencido(charge.data_vencimento)) {
-      updateData.total_atrasado = Math.max(0, Number(client.total_atrasado) - Number(charge.valor));
-    }
-
-    if (Object.keys(updateData).length > 0) {
-      await supabase
-        .from('clients')
-        .update(updateData)
-        .eq('id', client.id);
-    }
-
     await recalcularCliente(client.id);
 
     addToast('success', 'Cobrança excluída!');
@@ -365,32 +312,38 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
 
     setIsDeletingAll(true);
 
-    const descricaoBase = charge.descricao?.replace(/\s*\(\d+\/\d+\)\s*$/, '').trim() || charge.descricao || '';
+    const stripParcela = (descricao: string | null) =>
+      (descricao || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim();
+    const raiz = charge.charge_original_id || charge.id;
+    const descricaoBase = stripParcela(charge.descricao);
 
-    const { data: relatedCharges } = await supabase
+    const { data: clientCharges } = await supabase
       .from('charges')
       .select('*')
       .eq('user_id', charge.user_id)
-      .eq('client_id', charge.client_id)
-      .ilike('descricao', descricaoBase + '%');
+      .eq('client_id', charge.client_id);
 
-    const pendentes = (relatedCharges || []).filter((c: any) => 
-      c.status !== 'pago'
-    );
+    // Same group = linked by charge_original_id. Older charges have no link, so they fall
+    // back to an exact match of the description without the "(i/N)" suffix.
+    const pendentes = (clientCharges || []).filter((c: any) => {
+      if (c.status === 'pago') return false;
+      if (c.id === raiz || c.charge_original_id === raiz) return true;
+      return Boolean(descricaoBase) && c.recorrente && stripParcela(c.descricao) === descricaoBase;
+    });
 
     if (pendentes.length > 0) {
-      const idsToDelete = pendentes.map((c: any) => c.id);
-      await supabase
+      const { error } = await supabase
         .from('charges')
         .delete()
-        .in('id', idsToDelete);
+        .in('id', pendentes.map((c: any) => c.id));
 
-      await supabase
-        .from('clients')
-        .update({
-          total_atrasado: Math.max(0, Number(client.total_atrasado) - pendentes.filter((c: any) => isVencido(c.data_vencimento)).reduce((sum: number, c: any) => sum + Number(c.valor), 0)),
-        })
-        .eq('id', client.id);
+      if (error) {
+        addToast('error', 'Erro ao excluir parcelas');
+        setIsDeletingAll(false);
+        return;
+      }
+
+      await recalcularCliente(client.id);
     }
 
     addToast('success', `${pendentes.length} parcela(s) excluída(s)!`);
@@ -576,7 +529,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
             <div className="flex items-center gap-2 sm:gap-3">
               <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               <span className="text-gray-600 dark:text-gray-400 text-sm">
-                Cobrança recorrente - {charge.periodicidade === 'semanal' ? 'Semanal' : 'Mensal'}
+                Cobrança recorrente - {charge.periodicidade === 'semanal' ? 'Semanal' : charge.periodicidade === 'quinzenal' ? 'Quinzenal' : 'Mensal'}
               </span>
             </div>
             <button
@@ -701,7 +654,7 @@ export default function ChargeDetailPage({ params }: { params: Promise<{ id: str
             }}>
               Cancelar
             </Button>
-            <Button size="lg" onClick={handleMarkAsPaid}>
+            <Button size="lg" onClick={handleMarkAsPaid} isLoading={isPaying} disabled={isPaying}>
               {isPartialPayment ? 'Registrar Pagamento Parcial' : 'Confirmar'}
             </Button>
           </div>

@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 import { hasPremiumAccess } from '@/lib/subscription';
 import { isVencido, calcularScore } from '@/lib/utils';
+import { addDays, addMonths, format, parseISO } from 'date-fns';
 import type { Profile } from '@/types';
 
 interface ClientOption {
@@ -67,7 +68,8 @@ export default function NewChargePage() {
     loadData();
   }, [searchParams]);
 
-  const canAddCharge = hasPremiumAccess(profile) || (chargeCount + (formData.quantidade_parcelas || 1)) <= 10;
+  const parcelasACriar = formData.recorrente ? (formData.quantidade_parcelas || 1) : 1;
+  const canAddCharge = hasPremiumAccess(profile) || (chargeCount + parcelasACriar) <= 10;
 
   const checkForDuplicates = async (descricao: string, clientId: string, recorrente: boolean, periodicidade: string) => {
     if (!descricao.trim() || !clientId) {
@@ -151,23 +153,15 @@ export default function NewChargePage() {
       return;
     }
 
-    const vencimentoOriginal = new Date(formData.data_vencimento);
+    const vencimentoOriginal = parseISO(formData.data_vencimento);
     const chargesToInsert = [];
-    const numParcelas = formData.quantidade_parcelas || 1;
+    const numParcelas = formData.recorrente ? (formData.quantidade_parcelas || 1) : 1;
 
     for (let i = 0; i < numParcelas; i++) {
-      const dataVencimento = new Date(vencimentoOriginal);
-      
-      if (i > 0) {
-        switch (formData.periodicidade) {
-          case 'quinzenal':
-            dataVencimento.setDate(dataVencimento.getDate() + (15 * i));
-            break;
-          case 'mensal':
-            dataVencimento.setMonth(dataVencimento.getMonth() + i);
-            break;
-        }
-      }
+      // Always offset from the first due date so short months don't shift the following ones.
+      const dataVencimento = formData.periodicidade === 'quinzenal'
+        ? addDays(vencimentoOriginal, 15 * i)
+        : addMonths(vencimentoOriginal, i);
 
       const parcelaDesc = numParcelas > 1 
         ? `${formData.descricao || 'Cobrança'} (${i + 1}/${numParcelas})`
@@ -177,7 +171,7 @@ export default function NewChargePage() {
         user_id: user.id,
         client_id: formData.client_id,
         valor: parseFloat(formData.valor),
-        data_vencimento: dataVencimento.toISOString().split('T')[0],
+        data_vencimento: format(dataVencimento, 'yyyy-MM-dd'),
         descricao: parcelaDesc.trim(),
         status: 'pendente',
         recorrente: formData.recorrente,
@@ -185,14 +179,31 @@ export default function NewChargePage() {
       });
     }
 
-    const { error: insertError } = await supabase
+    // The first installment is the group root; the others point to it so they can be managed together.
+    const [primeira, ...demais] = chargesToInsert;
+    const { data: raiz, error: insertError } = await supabase
       .from('charges')
-      .insert(chargesToInsert);
+      .insert(primeira)
+      .select('id')
+      .single();
 
-    if (insertError) {
+    if (insertError || !raiz) {
       addToast('error', 'Erro ao criar cobrança');
       setIsLoading(false);
       return;
+    }
+
+    if (demais.length > 0) {
+      const { error: parcelasError } = await supabase
+        .from('charges')
+        .insert(demais.map(c => ({ ...c, charge_original_id: raiz.id })));
+
+      if (parcelasError) {
+        await supabase.from('charges').delete().eq('id', raiz.id);
+        addToast('error', 'Erro ao criar as parcelas');
+        setIsLoading(false);
+        return;
+      }
     }
 
     const { data: clientData } = await supabase
@@ -254,7 +265,7 @@ export default function NewChargePage() {
                 <p className="text-danger text-sm font-light">{errors.general}</p>
               </div>
             )}
-            {!hasPremiumAccess(profile) && !errors.general && (chargeCount + (formData.quantidade_parcelas || 1)) > 10 && (
+            {!hasPremiumAccess(profile) && !errors.general && (chargeCount + parcelasACriar) > 10 && (
               <div className="p-4 bg-danger/10 border border-danger/30 rounded-lg">
                 <p className="text-danger text-sm font-light">Você vai ultrapassar o limite de 10 cobranças. Reduza a quantidade de parcelas.</p>
                 <Link href="/dashboard/upgrade">

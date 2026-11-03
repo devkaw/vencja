@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
     const body: Request = await request.json();
     const { planType } = body;
 
+    if (planType !== 'monthly' && planType !== 'annual') {
+      return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -35,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const offerId = planType === 'monthly' ? getMonthlyOfferId() : getAnnualOfferId();
     const plan = PLANS[planType];
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vencja.com.br';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://venceja.com.br';
 
     const checkoutUrl = buildCheckoutUrl({
       offerId,
@@ -43,9 +47,9 @@ export async function POST(request: NextRequest) {
       customerName: user.email?.split('@')[0] || '',
       returnUrl: `${appUrl}/dashboard/upgrade/success`,
       customId: user.id,
+      callback: user.id,
     });
 
-    console.log('[Subscription] Checkout URL gerada:', checkoutUrl);
 
     return NextResponse.json({
       success: true,

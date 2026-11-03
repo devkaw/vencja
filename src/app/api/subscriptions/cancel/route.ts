@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/client';
+import { escapeHtml } from '@/lib/utils';
 import { Resend } from 'resend';
 import { sendCancellationRequestReceivedEmail } from '@/lib/email/payment-notifications';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contato@vencja.com.br';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contato@venceja.com.br';
 
 interface Request {
   reason?: string;
@@ -47,12 +49,17 @@ export async function POST(request: NextRequest) {
       ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR')
       : 'o fim do período atual';
 
-    await supabase.from('profiles').update({
+    const { error: updateError } = await createAdminClient().from('profiles').update({
       cancellation_requested_at: new Date().toISOString(),
       cancellation_type: 'cancel',
-      cancellation_reason: reason || 'Não informado',
+      cancellation_reason: String(reason || 'Não informado').slice(0, 1000),
       cancellation_status: 'pending',
     }).eq('id', user.id);
+
+    if (updateError) {
+      console.error('[Subscription request] Update error:', updateError.message);
+      return NextResponse.json({ error: 'Erro ao registrar solicitação' }, { status: 500 });
+    }
 
     await sendCancellationRequestReceivedEmail(
       profile.email,
@@ -72,8 +79,8 @@ export async function POST(request: NextRequest) {
           <p><strong>Email:</strong> ${profile.email}</p>
           <p><strong>Plano:</strong> ${profile.subscription_cycle === 'monthly' ? 'Pro Mensal' : 'Pro Anual'}</p>
           <p><strong>Valor:</strong> R$ ${profile.subscription_cycle === 'monthly' ? '49,90/mês' : '499,00/ano'}</p>
-          <p><strong>Accesso até:</strong> ${endsAt}</p>
-          <p><strong>Motivo:</strong> ${reason || 'Não informado'}</p>
+          <p><strong>Acesso até:</strong> ${endsAt}</p>
+          <p><strong>Motivo:</strong> ${escapeHtml(String(reason || 'Não informado'))}</p>
           <hr>
           <p>Para processar o cancelamento, vá ao painel Cakto → Assinaturas → Encontrar a assinatura → Cancelar</p>
         `,

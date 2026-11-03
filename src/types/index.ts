@@ -42,7 +42,7 @@ export interface Charge {
   dias_atraso: number;
   descricao: string | null;
   recorrente: boolean;
-  periodicidade: 'semanal' | 'mensal' | null;
+  periodicidade: 'semanal' | 'quinzenal' | 'mensal' | null;
   charge_original_id: string | null;
   created_at: string;
   client?: Client;

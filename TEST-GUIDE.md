@@ -4,7 +4,7 @@
 
 1. **Variáveis de ambiente no Vercel:**
    ```
-   CAKTO_WEBHOOK_SECRET=27bff7bad1b423338a057c9b779d011f95419e9e952fd7071811f3796aab6a1a
+   CAKTO_WEBHOOK_SECRET=<valor configurado no painel da Cakto — nunca versionar>
    ```
 
 2. **Tabela criada no Supabase:**
