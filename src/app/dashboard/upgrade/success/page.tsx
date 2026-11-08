@@ -3,21 +3,23 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Check, Loader2, ArrowRight } from 'lucide-react';
+import { Check, Loader2, ArrowRight, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { GlassCard as Card } from '@/components/screens/kit/glass-card';
 import { createClient } from '@/lib/supabase/client';
 import { hasPremiumAccess } from '@/lib/subscription';
-
-const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } };
 
 export default function SuccessPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasProAccess, setHasProAccess] = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
+    const supabase = createClient();
+
     async function checkStatus() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setIsLoading(false);
         return;
@@ -51,49 +53,60 @@ export default function SuccessPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-accent mb-4" />
-        <p className="text-slate-400">Verificando status...</p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center" role="status">
+        <Loader2 className="mb-4 size-8 animate-spin text-brand-ink" />
+        <p className="text-ink-3">Conferindo seu pagamento…</p>
       </div>
-    );
-  }
-
-  if (hasProAccess) {
-    return (
-      <motion.div initial="initial" animate="animate" variants={fadeIn} className="max-w-md mx-auto px-4 py-12 text-center">
-        <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
-          <Check className="w-10 h-10 text-accent" />
-        </div>
-        <h1 className="text-3xl font-light mb-3">Pagamento Confirmado!</h1>
-        <p className="text-slate-400 mb-8">
-          Seu Plano Pro está ativo e você agora tem acesso a todos os recursos premium.
-        </p>
-        <Link href="/dashboard">
-          <Button className="bg-accent text-black w-full">
-            Acessar Dashboard <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </Link>
-      </motion.div>
     );
   }
 
   return (
-    <motion.div initial="initial" animate="animate" variants={fadeIn} className="max-w-md mx-auto px-4 py-12 text-center">
-      <div className="w-20 h-20 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-6">
-        <Loader2 className="w-10 h-10 text-yellow-500" />
-      </div>
-      <h1 className="text-3xl font-light mb-3">Aguardando Confirmação</h1>
-      <p className="text-slate-400 mb-4">
-        Seu pagamento foi recebido e está sendo processado. Você receberá um email em breve confirmando a ativação.
-      </p>
-      <p className="text-slate-500 text-sm mb-8">
-        O processo leva poucos minutos. Se tiver dúvidas, entre em contato conosco.
-      </p>
-      <Link href="/dashboard">
-        <Button variant="outline" className="w-full">
-          Voltar ao Dashboard <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-      </Link>
-    </motion.div>
+    <div className="mx-auto max-w-lg py-6 sm:py-12">
+      <Card className="relative overflow-hidden p-8 text-center sm:p-10">
+        <div className="pointer-events-none absolute inset-0 aurora opacity-70" aria-hidden />
+        <div className="relative">
+          {hasProAccess ? (
+            <>
+              <motion.span
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                className="glass-brand mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl text-white"
+              >
+                <Check className="size-8" strokeWidth={3} />
+              </motion.span>
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Pro ativado</h1>
+              <p className="mx-auto mt-2 max-w-sm text-ink-3">Pronto. Clientes e cobranças ilimitados, WhatsApp, relatórios e exportação já estão liberados.</p>
+              <Button asChild size="lg" className="mt-8 w-full sm:w-auto">
+                <Link href="/dashboard">
+                  Ir para o painel
+                  <ArrowRight />
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <span className="mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl bg-warn-soft text-warn">
+                <Loader2 className="size-7 animate-spin" />
+              </span>
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Aguardando a confirmação</h1>
+              <p className="mx-auto mt-2 max-w-sm text-ink-3">
+                Recebemos seu pedido. Assim que o pagamento for confirmado, o Pro é ativado e você recebe um e-mail. Esta página atualiza sozinha.
+              </p>
+              <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-ink-3">
+                <Mail className="size-4" />
+                Dúvidas? suporte@venceja.com.br
+              </p>
+              <Button asChild variant="secondary" size="lg" className="mt-8 w-full sm:w-auto">
+                <Link href="/dashboard">
+                  Voltar ao painel
+                  <ArrowRight />
+                </Link>
+              </Button>
+            </>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }

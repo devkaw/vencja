@@ -44,3 +44,13 @@ uploads/
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Local preview build
+.next-completo/
+.playwright-mcp/
+.next-prod/
+
+# Local only
+backup-*.tar.gz
+.next-*/
+.claude/

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/client';
 import { hashToken } from '@/lib/auth-tokens';
+import { erroDeSenha } from '@/lib/domain/senha';
+import { dentroDoLimite, ipDaRequisicao } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!(await dentroDoLimite(`verify:${ipDaRequisicao(request)}`, 20, 3600))) {
+      return NextResponse.json({ error: 'Muitas tentativas. Aguarde um pouco antes de tentar de novo.' }, { status: 429 });
+    }
+
     const { token, newPassword } = await request.json();
 
     if (!token || typeof token !== 'string') {
@@ -43,11 +49,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate input before consuming the token, so a bad request doesn't burn the link.
-    if (tokenData.type === 'reset' && (typeof newPassword !== 'string' || newPassword.length < 6)) {
-      return NextResponse.json(
-        { error: 'Senha deve ter pelo menos 6 caracteres' },
-        { status: 400 }
-      );
+    const erroSenha = tokenData.type === 'reset' ? erroDeSenha(newPassword) : null;
+    if (erroSenha) {
+      return NextResponse.json({ error: erroSenha }, { status: 400 });
     }
 
     // Conditional update makes consumption single-use even under concurrent requests.

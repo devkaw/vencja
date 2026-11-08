@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface ProgressProps {
@@ -8,40 +9,37 @@ interface ProgressProps {
   className?: string;
   showLabel?: boolean;
   color?: 'primary' | 'success' | 'warning' | 'danger';
+  label?: string;
 }
 
-export function Progress({ 
-  value, 
-  max = 100, 
-  className, 
-  showLabel = false,
-  color = 'primary' 
-}: ProgressProps) {
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+const colors = {
+  primary: 'bg-brand-500',
+  success: 'bg-pos',
+  warning: 'bg-warn',
+  danger: 'bg-neg',
+};
 
-  const colors = {
-    primary: 'bg-primary-500',
-    success: 'bg-success-500',
-    warning: 'bg-warning-500',
-    danger: 'bg-danger-500',
-  };
+export function Progress({ value, max = 100, className, showLabel = false, color = 'primary', label }: ProgressProps) {
+  const percentage = max > 0 ? Math.min(Math.max((value / max) * 100, 0), 100) : 0;
 
   return (
     <div className={cn('w-full', className)}>
-      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div
-          className={cn(
-            'h-full rounded-full transition-all duration-500 ease-out',
-            colors[color]
-          )}
-          style={{ width: `${percentage}%` }}
+      <div
+        className="h-1.5 overflow-hidden rounded-full bg-ink/[0.07]"
+        role="progressbar"
+        aria-valuenow={Math.round(percentage)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label}
+      >
+        <motion.div
+          className={cn('h-full rounded-full', colors[color])}
+          initial={{ width: 0 }}
+          animate={{ width: `${percentage}%` }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         />
       </div>
-      {showLabel && (
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-right">
-          {Math.round(percentage)}%
-        </p>
-      )}
+      {showLabel && <p className="mt-1 text-right text-xs text-ink-3 tnum">{Math.round(percentage)}%</p>}
     </div>
   );
 }

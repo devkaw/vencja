@@ -189,11 +189,11 @@ Na seção **"Exportação de Dados"**, você pode:
 ### Como funciona o score do cliente?
 
 O score é uma pontuação de 0 a 100:
-- **70-100**: Bom pagador
-- **40-69**: Pagador moderado
-- **0-39**: Mal pagador
+- **80-100**: Bom pagador
+- **50-79**: Atenção
+- **0-49**: Risco alto
 
-O score é ajustado automaticamente baseado no histórico de pagamentos do cliente.
+Só contam cobranças pagas ou vencidas. Cobrança no prazo não pesa contra ninguém. O histórico recente pesa mais (o pago perde metade do peso a cada 6 meses), pontualidade e atrasos são pesados pelo valor, e com menos de 5 cobranças a nota fica mais perto de 70. Quem ainda não tem cobrança paga ou vencida aparece como "Sem histórico". e quem ainda não tem cobrança paga ou vencida aparece como "Sem histórico". Enquanto houver cobrança vencida em aberto, a nota não passa de 79. Depois de 30 dias de atraso, esse limite desce aos poucos até 49, aos 90 dias. Na tela do cliente, "Por que esta nota" mostra os pontos de cada critério.
 
 ### Posso usar em mais de um dispositivo?
 

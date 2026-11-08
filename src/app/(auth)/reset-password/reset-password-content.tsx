@@ -1,50 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { erroDeSenha } from '@/lib/domain/senha';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Eye, EyeOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CheckCircle2, AlertCircle, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { AuthShell } from '@/components/app/auth-shell';
 import { useAppStore } from '@/lib/store';
 
 export default function ResetPasswordContent() {
   const searchParams = useSearchParams();
-  const [token, setToken] = useState('');
+  const token = searchParams.get('token') || '';
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'loading' | 'ready' | 'success' | 'error'>(token ? 'ready' : 'error');
+  const [message, setMessage] = useState(token ? '' : 'Este link não é válido. Peça um novo e-mail de recuperação.');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addToast } = useAppStore();
-
-  useEffect(() => {
-    const tokenFromUrl = searchParams.get('token');
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-      setStatus('ready');
-    } else {
-      setStatus('error');
-      setMessage('Link inválido. Solicite uma nova recuperação de senha.');
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage('');
 
-    if (password.length < 6) {
-      setMessage('A senha deve ter pelo menos 6 caracteres');
+    const erroSenha = erroDeSenha(password);
+    if (erroSenha) {
+      setMessage(erroSenha);
       setIsSubmitting(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setMessage('As senhas não coincidem');
+      setMessage('As senhas não são iguais.');
       setIsSubmitting(false);
       return;
     }
@@ -60,129 +50,76 @@ export default function ResetPasswordContent() {
 
       if (!response.ok) {
         setStatus('error');
-        setMessage(data.error || 'Link expirado ou inválido');
+        setMessage(data.error || 'O link expirou ou não é válido.');
         setIsSubmitting(false);
         return;
       }
 
       setStatus('success');
-      addToast('success', 'Senha alterada com sucesso!');
+      addToast('success', 'Senha alterada.');
     } catch {
       setStatus('error');
-      setMessage('Erro de conexão. Tente novamente.');
+      setMessage('Sem conexão. Tente de novo.');
     }
 
     setIsSubmitting(false);
   };
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-black">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-gray-500">Verificando link...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'error') {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-black">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 pb-8 px-8 text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-600" />
-            </div>
-            <h1 className="text-xl font-extralight mb-2">Link Inválido</h1>
-            <p className="text-gray-500 mb-6">{message}</p>
-            <Link href="/forgot-password">
-              <Button>Solicitar novo email</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (status === 'success') {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-black">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 pb-8 px-8 text-center">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <h1 className="text-xl font-extralight mb-2">Senha Alterada!</h1>
-            <p className="text-gray-500 mb-6">Sua senha foi redefinida com sucesso.</p>
-            <Link href="/login">
-              <Button className="bg-accent">Ir para Login</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-black">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6 pb-8 px-8">
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 mb-6">
-              <Image 
-                src="/logo.png" 
-                alt="VenceJa" 
-                width={40} 
-                height={40}
-                className="w-10 h-10 rounded-xl object-contain bg-black"
-              />
-              <span className="text-xl font-extralight">VenceJa</span>
-            </Link>
-            <h1 className="text-2xl font-extralight">Nova Senha</h1>
-            <p className="text-gray-500 mt-2">Digite sua nova senha abaixo</p>
-          </div>
+    <AuthShell backHref="/login">
+      {status === 'loading' && (
+        <div className="text-center" role="status">
+          <Loader2 className="mx-auto mb-4 size-8 animate-spin text-ink-4" />
+          <p className="text-ink-3">Verificando o link…</p>
+        </div>
+      )}
 
-          {message && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400">{message}</p>
-            </div>
-          )}
+      {status === 'error' && (
+        <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+          <span className="mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl bg-neg-soft text-neg">
+            <AlertCircle className="size-7" />
+          </span>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Link inválido</h1>
+          <p className="mt-2 text-ink-3">{message}</p>
+          <Button asChild size="lg" className="mt-8 w-full">
+            <Link href="/forgot-password">Pedir um novo link</Link>
+          </Button>
+        </motion.div>
+      )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <Input
-                label="Nova Senha"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Mínimo 6 caracteres"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
+      {status === 'success' && (
+        <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+          <span className="glass-brand mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl text-white">
+            <CheckCircle2 className="size-7" />
+          </span>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Senha alterada</h1>
+          <p className="mt-2 text-ink-3">Agora é só entrar com a nova senha.</p>
+          <Button asChild size="lg" className="mt-8 w-full">
+            <Link href="/login">Entrar</Link>
+          </Button>
+        </motion.div>
+      )}
 
-            <Input
-              label="Confirmar Senha"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Repita a nova senha"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
+      {status === 'ready' && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Crie uma nova senha</h1>
+          <p className="mt-2 text-ink-3">Use pelo menos 8 caracteres.</p>
 
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {message && (
+              <div className="flex items-start gap-2.5 rounded-xl border border-neg/25 bg-neg-soft p-3.5 text-sm text-neg" role="alert">
+                <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                {message}
+              </div>
+            )}
+            <Input label="Nova senha" type="password" icon={<Lock />} showPasswordToggle placeholder="Mínimo de 8 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required />
+            <Input label="Confirme a nova senha" type="password" icon={<Lock />} showPasswordToggle placeholder="Repita a senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" required />
             <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>
-              Alterar Senha
+              Salvar nova senha
             </Button>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        </motion.div>
+      )}
+    </AuthShell>
   );
 }

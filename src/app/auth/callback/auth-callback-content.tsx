@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, Loader2, AlertCircle, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CheckCircle2, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AuthShell } from '@/components/app/auth-shell';
 
 export default function AuthCallbackContent() {
   const searchParams = useSearchParams();
@@ -23,7 +25,7 @@ export default function AuthCallbackContent() {
       if (error || errorCode) {
         setStatus('error');
         if (errorCode === 'otp_expired') {
-          setMessage('O link de confirmação expirou. Por favor, solicite um novo email de verificação.');
+          setMessage('O link de confirmação expirou. Peça um novo e-mail de verificação.');
         } else {
           setMessage('Ocorreu um erro ao confirmar. Tente novamente.');
         }
@@ -54,7 +56,7 @@ export default function AuthCallbackContent() {
           }
 
           setStatus('success');
-          setMessage('Email confirmado com sucesso!');
+          setMessage('E-mail confirmado.');
         } catch {
           setStatus('error');
           setMessage('Ocorreu um erro inesperado. Tente novamente.');
@@ -85,7 +87,7 @@ export default function AuthCallbackContent() {
 
         if (data.type === 'verification') {
           setStatus('success');
-          setMessage('Email confirmado com sucesso!');
+          setMessage('E-mail confirmado.');
         } else if (data.type === 'reset') {
           window.location.href = `/dashboard/settings?reset_token=${token}`;
           return;
@@ -100,85 +102,50 @@ export default function AuthCallbackContent() {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 dark:bg-[#000000]">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6 pb-8 px-8">
-          <div className="text-center mb-8">
-            <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${
-              status === 'loading' ? 'bg-blue-100' :
-              status === 'success' ? 'bg-green-100' : 'bg-red-100'
-            }`}>
-              {status === 'loading' ? (
-                <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-              ) : status === 'success' ? (
-                <CheckCircle className="w-10 h-10 text-green-600" />
-              ) : (
-                <AlertCircle className="w-10 h-10 text-red-600" />
-              )}
-            </div>
+    <AuthShell backHref="/login">
+      <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="text-center" aria-live="polite">
+        {status === 'loading' && (
+          <>
+            <span className="mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl bg-surface-3 text-ink-3">
+              <Loader2 className="size-7 animate-spin" />
+            </span>
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Confirmando…</h1>
+            <p className="mt-2 text-ink-3">{message || 'Só um instante.'}</p>
+          </>
+        )}
 
-            <h1 className="text-2xl font-extralight text-gray-900 dark:text-white mb-2">
-              {status === 'loading' ? 'Confirmando...' :
-               status === 'success' ? 'Confirmado!' : 'Erro na Confirmação'}
-            </h1>
-            
-            <p className={`text-sm ${status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
-              {message || (status === 'loading' ? 'Aguarde um momento...' : '')}
-            </p>
-          </div>
-
-          {status === 'success' && (
-            <div className="space-y-4">
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <Mail className="w-5 h-5 text-green-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-light text-green-800 dark:text-green-200">
-                      Sua conta foi confirmada!
-                    </p>
-                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                      Agora você pode fazer login e começar a usar o VenceJa.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <Link href="/dashboard" className="block">
-                <button className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-light rounded-lg transition-colors">
-                  Ir para o Dashboard
-                </button>
+        {status === 'success' && (
+          <>
+            <span className="glass-brand mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl text-white">
+              <CheckCircle2 className="size-7" />
+            </span>
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">E-mail confirmado</h1>
+            <p className="mt-2 text-ink-3">Sua conta está ativa. Vamos cadastrar seu primeiro cliente?</p>
+            <Button asChild size="lg" className="mt-8 w-full">
+              <Link href="/dashboard">
+                Ir para o painel
+                <ArrowRight />
               </Link>
-            </div>
-          )}
+            </Button>
+          </>
+        )}
 
-          {status === 'error' && (
-            <div className="space-y-4">
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  Se você já confirmou seu email, pode fazer login normalmente.
-                  Caso contrário, tente fazer login para receber um novo email.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <Link href="/login" className="flex-1">
-                  <button className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-light rounded-lg transition-colors">
-                    Ir para Login
-                  </button>
-                </Link>
-              </div>
+        {status === 'error' && (
+          <>
+            <span className="mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl bg-neg-soft text-neg">
+              <AlertCircle className="size-7" />
+            </span>
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Não deu para confirmar</h1>
+            <p className="mt-2 text-ink-3">{message}</p>
+            <div className="mt-6 rounded-2xl border border-line bg-surface p-4 text-left text-sm text-ink-2">
+              Se você já confirmou antes, é só entrar normalmente. Se não, entre com seu e-mail e senha para receber um novo link.
             </div>
-          )}
-
-          {status === 'loading' && (
-            <div className="text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Você será redirecionado em breve...
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            <Button asChild size="lg" className="mt-6 w-full">
+              <Link href="/login">Ir para o login</Link>
+            </Button>
+          </>
+        )}
+      </motion.div>
+    </AuthShell>
   );
 }

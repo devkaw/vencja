@@ -1,3 +1,4 @@
+import { escapeHtml } from '@/lib/utils';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export const verificationEmailTemplate = (name: string, verifyUrl: string) => `
@@ -6,9 +7,8 @@ export const verificationEmailTemplate = (name: string, verifyUrl: string) => `
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 0;">
     <tr>
       <td align="center">
@@ -39,7 +39,7 @@ export const verificationEmailTemplate = (name: string, verifyUrl: string) => `
           <tr>
             <td style="padding-bottom: 24px;">
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
-                Olá, <strong style="color: #ffffff;">${name || 'usuário'}</strong>!
+                Olá, <strong style="color: #ffffff;">${escapeHtml(name || 'usuário')}</strong>!
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0;">
                 Você está a um passo de ativar sua conta no <strong style="color: #10b981;">VenceJa</strong>. Para começar a gerenciar suas cobranças de forma inteligente, confirme seu email:

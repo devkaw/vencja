@@ -1,58 +1,62 @@
 'use client';
 
+import { AnimatePresence, motion } from 'framer-motion';
+import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const icons = {
+  success: CheckCircle2,
+  error: AlertCircle,
+  info: Info,
+  warning: AlertTriangle,
+};
+
+const iconStyles = {
+  success: 'bg-pos-soft text-pos',
+  error: 'bg-neg-soft text-neg',
+  info: 'bg-info-soft text-info',
+  warning: 'bg-warn-soft text-warn',
+};
 
 export function ToastContainer() {
   const { toasts, removeToast } = useAppStore();
 
-  const icons = {
-    success: CheckCircle,
-    error: AlertCircle,
-    info: Info,
-    warning: AlertTriangle,
-  };
-
-  const styles = {
-    success: 'bg-white dark:bg-black border-primary/20',
-    error: 'bg-white dark:bg-black border-danger/20',
-    info: 'bg-white dark:bg-black border-gray-200 dark:border-gray-800',
-    warning: 'bg-white dark:bg-black border-warning-500/20',
-  };
-
-  const iconStyles = {
-    success: 'text-primary',
-    error: 'text-danger',
-    info: 'text-gray-500',
-    warning: 'text-warning-500',
-  };
-
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-      {toasts.map((toast) => {
-        const Icon = icons[toast.type];
-        return (
-          <div
-            key={toast.id}
-            className={cn(
-              'flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg animate-slide-in min-w-[300px] max-w-md bg-white dark:bg-black',
-              styles[toast.type]
-            )}
-          >
-            <Icon className={cn('w-5 h-5 flex-shrink-0', iconStyles[toast.type])} />
-            <p className="flex-1 text-sm">
-              {toast.message}
-            </p>
-            <button
-              onClick={() => removeToast(toast.id)}
-              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+    <div
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[80] flex flex-col items-center gap-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-end sm:p-6"
+      role="region"
+      aria-label="Notificações"
+    >
+      <AnimatePresence initial={false}>
+        {toasts.map((toast) => {
+          const Icon = icons[toast.type];
+          return (
+            <motion.div
+              key={toast.id}
+              layout
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.96, transition: { duration: 0.15 } }}
+              transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+              role={toast.type === 'error' ? 'alert' : 'status'}
+              className="glass-strong pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl py-2.5 pl-2.5 pr-2"
             >
-              <X className="w-4 h-4 text-gray-400" />
-            </button>
-          </div>
-        );
-      })}
+              <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-xl', iconStyles[toast.type])}>
+                <Icon className="size-[18px]" />
+              </span>
+              <p className="flex-1 text-sm font-medium text-ink">{toast.message}</p>
+              <button
+                onClick={() => removeToast(toast.id)}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-ink-4 transition-colors hover:bg-ink/5 hover:text-ink-2"
+                aria-label="Fechar notificação"
+              >
+                <X className="size-4" />
+              </button>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
     </div>
   );
 }

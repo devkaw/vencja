@@ -1,3 +1,4 @@
+import { escapeHtml } from '@/lib/utils';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export const refundEmailTemplate = (name: string, price: number, reason?: string) => `
@@ -6,9 +7,8 @@ export const refundEmailTemplate = (name: string, price: number, reason?: string
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 0;">
     <tr>
       <td align="center">
@@ -39,7 +39,7 @@ export const refundEmailTemplate = (name: string, price: number, reason?: string
           <tr>
             <td style="padding-bottom: 24px;">
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
-                Olá, <strong style="color: #ffffff;">${name || 'usuário'}</strong>!
+                Olá, <strong style="color: #ffffff;">${escapeHtml(name || 'usuário')}</strong>!
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0;">
                 O reembolso de <strong style="color: #ef4444;">R$ ${price.toFixed(2).replace('.', ',')}</strong> foi processado e o valor será creditado na sua conta em até 5 dias úteis (dependendo do banco).
@@ -94,7 +94,7 @@ export const refundRequestEmailToAdminTemplate = (
 </head>
 <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif;">
   <h2>Nova Solicitação de Reembolso</h2>
-  <p><strong>Cliente:</strong> ${name}</p>
+  <p><strong>Cliente:</strong> ${escapeHtml(name)}</p>
   <p><strong>Email:</strong> ${email}</p>
   <p><strong>Valor:</strong> R$ ${price.toFixed(2).replace('.', ',')}</p>
   <p><strong>ID Assinatura:</strong> ${subscriptionId}</p>

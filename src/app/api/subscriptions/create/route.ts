@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const offerId = planType === 'monthly' ? getMonthlyOfferId() : getAnnualOfferId();
     const plan = PLANS[planType];
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://venceja.com.br';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.venceja.com.br';
 
     const checkoutUrl = buildCheckoutUrl({
       offerId,

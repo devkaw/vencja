@@ -14,6 +14,11 @@ export async function middleware(request: NextRequest) {
     '/help',
     '/termos',
     '/privacidade',
+    '/reembolso',
+    '/cookies',
+    '/exclusao-de-dados',
+    '/licencas',
+    '/descadastrar',
     '/sitemap.xml',
     '/robots.txt',
   ];

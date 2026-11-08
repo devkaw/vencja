@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/client';
 import { isValidEmail } from '@/lib/auth-tokens';
+import { erroDeSenha } from '@/lib/domain/senha';
+import { VERSAO_TERMOS } from '@/lib/legal';
+import { dentroDoLimite, ipDaRequisicao } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json();
+    if (!(await dentroDoLimite(`signup:${ipDaRequisicao(request)}`, 5, 3600))) {
+      return NextResponse.json({ error: 'Muitas tentativas. Aguarde um pouco antes de tentar de novo.' }, { status: 429 });
+    }
+
+    const { email, password, name, aceite } = await request.json();
 
     if (!isValidEmail(email) || typeof password !== 'string') {
       return NextResponse.json(
@@ -13,11 +20,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'A senha deve ter pelo menos 6 caracteres' },
-        { status: 400 }
-      );
+    const erroSenha = erroDeSenha(password);
+    if (erroSenha) {
+      return NextResponse.json({ error: erroSenha }, { status: 400 });
+    }
+
+    if (aceite !== true) {
+      return NextResponse.json({ error: 'Para criar a conta, aceite os Termos e confirme que tem 18 anos ou mais.' }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -27,7 +36,13 @@ export async function POST(request: NextRequest) {
       email: normalizedEmail,
       password,
       email_confirm: false,
-      user_metadata: { name: typeof name === 'string' ? name.slice(0, 120) : '' },
+      user_metadata: {
+        name: typeof name === 'string' ? name.slice(0, 120) : '',
+        // Proof of consent: what was accepted and when (LGPD art. 8, § 2º).
+        termos_versao: VERSAO_TERMOS,
+        termos_aceitos_em: new Date().toISOString(),
+        maior_de_18: true,
+      },
     });
 
     if (signUpError) {

@@ -1,14 +1,15 @@
 'use client';
 
 import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 import ResetPasswordContent from './reset-password-content';
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-black">
+    <div className="flex min-h-dvh items-center justify-center bg-canvas" role="status">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-500">Verificando link...</p>
+        <Loader2 className="mx-auto mb-4 size-8 animate-spin text-ink-4" />
+        <p className="text-ink-3">Verificando o link…</p>
       </div>
     </div>
   );

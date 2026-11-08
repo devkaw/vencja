@@ -1,170 +1,132 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AuthShell } from '@/components/app/auth-shell';
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-dvh items-center justify-center bg-canvas">
+          <Loader2 className="size-7 animate-spin text-ink-4" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );
 }
 
+/** Only follow internal paths so the redirect param can't send people off-site. */
+function safeRedirect(value: string | null) {
+  if (value && value.startsWith('/') && !value.startsWith('//')) return value;
+  return '/dashboard';
+}
+
 function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToast } = useAppStore();
-  const supabase = createClient();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
+    const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: email.toLowerCase().trim(),
       password,
     });
 
     if (error) {
-      setError('Email ou senha incorretos');
-      addToast('error', 'Falha ao fazer login');
+      setError('E-mail ou senha incorretos. Confira e tente de novo.');
       setIsLoading(false);
       return;
     }
 
-    addToast('success', 'Login realizado com sucesso!');
-    router.push('/dashboard');
+    addToast('success', 'Bem-vindo de volta.');
+    router.push(safeRedirect(searchParams.get('redirect')));
     router.refresh();
   };
 
-  if (!mounted) return null;
-
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 bg-accent/5 relative overflow-hidden">
-        <div className="absolute inset-0 hero-glow opacity-50" />
-        <div className="relative z-10 flex flex-col justify-center items-center w-full p-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-md text-center"
-          >
-            <Image 
-              src="/logo.png" 
-              alt="VenceJa" 
-              width={80} 
-              height={80}
-              className="w-20 h-20 rounded-2xl object-contain mx-auto mb-8"
-            />
-            <h2 className="text-3xl font-light mb-4">
-              Bem-vindo de volta
-            </h2>
-            <p className="text-lg text-slate-400 font-light">
-              Acesse sua conta e gerencie seus clientes e cobranças de forma simples e eficiente.
-            </p>
-          </motion.div>
-        </div>
-      </div>
+    <AuthShell aside={{ title: 'Seu dinheiro na rua, de volta para o caixa.', points: ['Veja quem pagou e quem atrasou', 'Cobre pelo WhatsApp com a mensagem pronta', 'Funciona no celular, sem instalar nada'] }}>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">Entrar</h1>
+        <p className="mt-2 text-ink-3">Que bom te ver de novo.</p>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-accent mb-8">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-light">Voltar</span>
-          </Link>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="flex items-start gap-2.5 rounded-xl border border-neg/25 bg-neg-soft p-3.5 text-sm text-neg"
+              role="alert"
+            >
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              {error}
+            </motion.div>
+          )}
 
-          <div className="mb-8">
-            <h1 className="text-2xl font-light mb-2">Entrar na sua conta</h1>
-            <p className="text-slate-500 font-light">Informe seus dados para acessar</p>
-          </div>
+          <Input
+            label="E-mail"
+            type="email"
+            placeholder="voce@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            icon={<Mail />}
+            autoComplete="email"
+            required
+          />
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="p-4 bg-danger/10 border border-danger/20 rounded-xl flex items-center gap-3"
-              >
-                <AlertCircle className="w-5 h-5 text-danger flex-shrink-0" />
-                <p className="text-sm text-danger">{error}</p>
-              </motion.div>
-            )}
-
-            <Input
-              label="Email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              icon={<Mail className="w-5 h-5" />}
-              required
-            />
-
-            <div className="relative">
-              <Input
-                label="Senha"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                icon={<Lock className="w-5 h-5" />}
-                showPasswordToggle
-                required
-              />
-            </div>
-
-            <div className="flex items-center justify-end">
-              <Link href="/forgot-password" className="text-sm font-light text-accent hover:underline">
-                Esqueceu a senha?
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label htmlFor="password" className="text-sm font-medium text-ink-2">
+                Senha
+              </label>
+              <Link href="/forgot-password" className="text-sm font-medium text-brand-ink hover:underline">
+                Esqueci a senha
               </Link>
             </div>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              icon={<Lock />}
+              showPasswordToggle
+              autoComplete="current-password"
+              required
+            />
+          </div>
 
-            <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-              {isLoading ? 'Entrando...' : 'Entrar'}
-            </Button>
-          </form>
+          <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
+            {isLoading ? 'Entrando…' : 'Entrar'}
+            {!isLoading && <ArrowRight />}
+          </Button>
+        </form>
 
-          <p className="text-center text-sm text-slate-500 mt-8 font-light">
-            Não tem uma conta?{' '}
-            <Link href="/register" className="text-accent font-light hover:underline">
-              Cadastre-se grátis
-            </Link>
-          </p>
-
-          <a 
-            href="mailto:suporte@venceja.com.br" 
-            className="flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-accent mt-6 transition-colors font-light"
-          >
-            <Mail className="w-4 h-4" />
-            <span>Precisa de ajuda? Fale conosco</span>
-          </a>
-        </motion.div>
-      </div>
-    </div>
+        <div className="mt-8 rounded-2xl border border-line bg-surface p-4 text-center text-sm text-ink-3">
+          Ainda não tem conta?{' '}
+          <Link href="/register" className="font-semibold text-brand-ink hover:underline">
+            Crie a sua grátis
+          </Link>
+        </div>
+      </motion.div>
+    </AuthShell>
   );
 }

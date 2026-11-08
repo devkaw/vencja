@@ -1,3 +1,4 @@
+import { SUPORTE_PRIORITARIO } from '@/lib/legal';
 import type { Profile } from '@/types';
 
 export function hasPremiumAccess(profile: Profile | null): boolean {
@@ -39,6 +40,7 @@ export const PLANS = {
       'Suporte por email',
       'Cobranças recorrentes',
       'Pagamento parcial',
+      'Aviso diário por e-mail',
     ],
     limits: {
       maxClients: 3,
@@ -57,7 +59,7 @@ export const PLANS = {
       'Cobrança via WhatsApp',
       'Relatórios completos',
       'Exportação CSV',
-      'Suporte prioritário',
+      SUPORTE_PRIORITARIO,
     ],
     limits: {
       maxClients: -1,

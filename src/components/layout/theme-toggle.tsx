@@ -1,60 +1,83 @@
 'use client';
 
 import { Moon, Sun } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { cn } from '@/lib/utils';
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [mounted, setMounted] = useState(false);
+type Theme = 'light' | 'dark';
 
-  useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem('theme');
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = (stored as 'light' | 'dark') || (systemDark ? 'dark' : 'light');
-    setTheme(initialTheme);
-    if (initialTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
+// The <html> class is the source of truth (set before paint by the root layout script).
+function subscribe(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  return () => observer.disconnect();
+}
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+const getSnapshot = (): Theme => (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+const getServerSnapshot = (): Theme => 'light';
+
+export function ThemeToggle({ className, withLabel }: { className?: string; withLabel?: boolean }) {
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const next: Theme = theme === 'light' ? 'dark' : 'light';
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // Storage can be blocked; the toggle still works for this visit.
     }
+
+    const root = document.documentElement;
+    const apply = () => root.classList.toggle('dark', next === 'dark');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduced) {
+      apply();
+      return;
+    }
+
+    if (!document.startViewTransition) {
+      root.classList.add('theme-fading');
+      apply();
+      window.setTimeout(() => root.classList.remove('theme-fading'), 550);
+      return;
+    }
+
+    // The new theme spreads out as a circle from the button that was pressed.
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = left + width / 2;
+    const y = top + height / 2;
+    const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+    const transition = document.startViewTransition(apply);
+    transition.ready
+      .then(() => {
+        root.animate(
+          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+          { duration: 750, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', pseudoElement: '::view-transition-new(root)' }
+        );
+      })
+      .catch(() => {});
   };
 
-  if (!mounted) {
-    return (
-      <button className="p-2 rounded-lg">
-        <Moon className="w-5 h-5" />
-      </button>
-    );
-  }
+  const label = theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro';
 
   return (
     <button
+      type="button"
       onClick={toggleTheme}
       className={cn(
-        'p-2 rounded-lg transition-colors',
-        'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',
-        'hover:bg-gray-100 dark:hover:bg-gray-800'
+        'inline-flex items-center gap-3 rounded-xl text-ink-3 transition-[color,background-color,transform] duration-200 hover:scale-110 hover:bg-ink/5 hover:text-ink active:scale-90',
+        withLabel ? 'h-10 w-full px-3 text-sm font-medium' : 'size-10 justify-center',
+        className
       )}
-      aria-label="Alternar tema"
+      aria-label={label}
+      title={label}
     >
-      {theme === 'light' ? (
-        <Moon className="w-5 h-5" />
-      ) : (
-        <Sun className="w-5 h-5" />
-      )}
+      <span className="relative size-[18px]">
+        <Sun className={cn('absolute inset-0 size-[18px] transition-all duration-300', theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-50 opacity-0')} />
+        <Moon className={cn('absolute inset-0 size-[18px] transition-all duration-300', theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-50 opacity-0')} />
+      </span>
+      {withLabel && <span>{theme === 'light' ? 'Tema escuro' : 'Tema claro'}</span>}
     </button>
   );
 }

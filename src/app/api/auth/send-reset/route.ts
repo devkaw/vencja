@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendResetPasswordEmail } from '@/lib/email/mailersend';
 import { issueAuthToken } from '@/lib/issue-auth-token';
 import { isValidEmail } from '@/lib/auth-tokens';
+import { dentroDoLimite, ipDaRequisicao } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!(await dentroDoLimite(`reset:${ipDaRequisicao(request)}`, 10, 3600))) {
+      return NextResponse.json({ error: 'Muitas tentativas. Aguarde 1 hora antes de tentar novamente.' }, { status: 429 });
+    }
+
     const { email } = await request.json();
 
     if (!isValidEmail(email)) {
@@ -35,7 +40,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://venceja.com.br';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.venceja.com.br';
     const resetUrl = `${appUrl}/reset-password?token=${result.token}`;
 
     const sent = await sendResetPasswordEmail(email.toLowerCase().trim(), result.userName, resetUrl);

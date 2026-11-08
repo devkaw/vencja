@@ -70,13 +70,12 @@ export async function POST(request: NextRequest) {
 
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
-        from: `"VenceJa" <${process.env.RESEND_FROM_EMAIL}>`,
+        from: `"VenceJá" <${process.env.RESEND_FROM_EMAIL}>`,
         to: ADMIN_EMAIL,
         subject: `Solicitação de cancelamento - ${profile.email}`,
         html: `
           <h2>Nova solicitação de cancelamento</h2>
-          <p><strong>Usuário:</strong> ${profile.email}</p>
-          <p><strong>Email:</strong> ${profile.email}</p>
+          <p><strong>Email:</strong> ${escapeHtml(profile.email)}</p>
           <p><strong>Plano:</strong> ${profile.subscription_cycle === 'monthly' ? 'Pro Mensal' : 'Pro Anual'}</p>
           <p><strong>Valor:</strong> R$ ${profile.subscription_cycle === 'monthly' ? '49,90/mês' : '499,00/ano'}</p>
           <p><strong>Acesso até:</strong> ${endsAt}</p>

@@ -1,3 +1,5 @@
+import { escapeHtml } from '@/lib/utils';
+import { PRAZO_ATENDIMENTO, SUPORTE_PRIORITARIO } from '@/lib/legal';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export const paymentConfirmedEmailTemplate = (
@@ -10,9 +12,8 @@ export const paymentConfirmedEmailTemplate = (
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 0;">
     <tr>
       <td align="center">
@@ -43,7 +44,7 @@ export const paymentConfirmedEmailTemplate = (
           <tr>
             <td style="padding-bottom: 24px;">
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
-                Olá, <strong style="color: #ffffff;">${name || 'usuário'}</strong>!
+                Olá, <strong style="color: #ffffff;">${escapeHtml(name || 'usuário')}</strong>!
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
                 Seu pagamento foi confirmado e seu <strong style="color: #10b981;">Plano Pro</strong> está agora ativo!
@@ -79,7 +80,7 @@ export const paymentConfirmedEmailTemplate = (
                 <li style="margin-bottom: 8px;">Cobrança via WhatsApp</li>
                 <li style="margin-bottom: 8px;">Cobranças recorrentes</li>
                 <li style="margin-bottom: 8px;">Exportação CSV</li>
-                <li>Suporte prioritário</li>
+                <li>${SUPORTE_PRIORITARIO}</li>
               </ul>
             </td>
           </tr>
@@ -127,9 +128,8 @@ export const paymentRejectedEmailTemplate = (
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 0;">
     <tr>
       <td align="center">
@@ -160,7 +160,7 @@ export const paymentRejectedEmailTemplate = (
           <tr>
             <td style="padding-bottom: 24px;">
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
-                Olá, <strong style="color: #ffffff;">${name || 'usuário'}</strong>!
+                Olá, <strong style="color: #ffffff;">${escapeHtml(name || 'usuário')}</strong>!
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0;">
                 Infelizmente não foi possível processar seu pagamento. ${reason ? `Motivo: ${reason}` : 'Por favor, verifique os dados do seu cartão e tente novamente.'}
@@ -225,9 +225,8 @@ export const subscriptionCanceledEmailTemplate = (name: string, endDate?: string
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 0;">
     <tr>
       <td align="center">
@@ -258,7 +257,7 @@ export const subscriptionCanceledEmailTemplate = (name: string, endDate?: string
           <tr>
             <td style="padding-bottom: 24px;">
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
-                Olá, <strong style="color: #ffffff;">${name || 'usuário'}</strong>!
+                Olá, <strong style="color: #ffffff;">${escapeHtml(name || 'usuário')}</strong>!
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0;">
                 Sua assinatura do Plano Pro foi cancelada com sucesso.
@@ -315,9 +314,8 @@ export const cancellationRequestReceivedEmailTemplate = (
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 0;">
     <tr>
       <td align="center">
@@ -343,13 +341,13 @@ export const cancellationRequestReceivedEmailTemplate = (
           <tr>
             <td style="padding-bottom: 24px;">
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
-                Olá, <strong style="color: #ffffff;">${name || 'usuário'}</strong>!
+                Olá, <strong style="color: #ffffff;">${escapeHtml(name || 'usuário')}</strong>!
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
                 Recebemos sua solicitação de cancelamento do <strong style="color: #ffffff;">Plano Pro ${planType === 'annual' ? 'Anual' : 'Mensal'}</strong>.
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0;">
-                Sua solicitação será processada em até <strong style="color: #f59e0b;">24 horas</strong>.
+                Sua solicitação será processada em até <strong style="color: #f59e0b;">${PRAZO_ATENDIMENTO}</strong>.
               </p>
             </td>
           </tr>
@@ -407,9 +405,8 @@ export const refundRequestReceivedEmailTemplate = (
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 0;">
     <tr>
       <td align="center">
@@ -435,13 +432,13 @@ export const refundRequestReceivedEmailTemplate = (
           <tr>
             <td style="padding-bottom: 24px;">
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
-                Olá, <strong style="color: #ffffff;">${name || 'usuário'}</strong>!
+                Olá, <strong style="color: #ffffff;">${escapeHtml(name || 'usuário')}</strong>!
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
                 Recebemos sua solicitação de reembolso do <strong style="color: #ffffff;">Plano Pro ${planType === 'annual' ? 'Anual' : 'Mensal'}</strong> no valor de <strong style="color: #ffffff;">R$ ${price.toFixed(2).replace('.', ',')}</strong>.
               </p>
               <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0;">
-                Sua solicitação será processada em até <strong style="color: #3b82f6;">24 horas</strong>.
+                Sua solicitação será processada em até <strong style="color: #3b82f6;">${PRAZO_ATENDIMENTO}</strong>.
               </p>
             </td>
           </tr>
@@ -465,7 +462,7 @@ export const refundRequestReceivedEmailTemplate = (
                 <tr>
                   <td style="text-align: center;">
                     <p style="color: #10b981; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">DIAS RESTANTES PARA REEMBOLSO</p>
-                    <p style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0;">${daysRemaining} dias</p>
+                    <p style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0;">${daysRemaining === 0 ? 'Último dia' : `${daysRemaining} ${daysRemaining === 1 ? 'dia' : 'dias'}`}</p>
                   </td>
                 </tr>
               </table>

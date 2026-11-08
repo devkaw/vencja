@@ -1,0 +1,6 @@
+backup-*.tar.gz
+docs/
+scripts/
+supabase/
+.next-completo/
+.next-prod/

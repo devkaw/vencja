@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/client';
 import { escapeHtml } from '@/lib/utils';
 import { Resend } from 'resend';
 import { sendRefundRequestReceivedEmail } from '@/lib/email/payment-notifications';
+import { prazoReembolso } from '@/lib/domain/reembolso';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contato@venceja.com.br';
@@ -12,7 +13,6 @@ interface Request {
   reason: string;
 }
 
-const REFUND_DAYS = 7;
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,12 +53,9 @@ export async function POST(request: NextRequest) {
     }
     const purchasedAt = new Date(profile.subscription_started_at);
     
-    const now = new Date();
-    const diffTime = now.getTime() - purchasedAt.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const daysRemaining = REFUND_DAYS - diffDays;
+    const { elegivel, diasRestantes: daysRemaining, diasDesdeCompra: diffDays } = prazoReembolso(purchasedAt);
 
-    if (daysRemaining <= 0) {
+    if (!elegivel) {
       return NextResponse.json({ 
         error: 'O prazo de 7 dias para solicitação de reembolso foi excedido. Entre em contato conosco pelo email.' 
       }, { status: 400 });
@@ -88,13 +85,12 @@ export async function POST(request: NextRequest) {
 
     if (process.env.RESEND_API_KEY) {
       await resend.emails.send({
-        from: `"VenceJa" <${process.env.RESEND_FROM_EMAIL}>`,
+        from: `"VenceJá" <${process.env.RESEND_FROM_EMAIL}>`,
         to: ADMIN_EMAIL,
         subject: `Solicitação de REEMBOLSO - ${profile.email} (${daysRemaining} dias restantes)`,
         html: `
           <h2>Nova solicitação de REEMBOLSO</h2>
-          <p><strong>Usuário:</strong> ${profile.email}</p>
-          <p><strong>Email:</strong> ${profile.email}</p>
+          <p><strong>Email:</strong> ${escapeHtml(profile.email)}</p>
           <p><strong>Plano:</strong> ${profile.subscription_cycle === 'monthly' ? 'Pro Mensal' : 'Pro Anual'}</p>
           <p><strong>Valor:</strong> R$ ${price.toFixed(2).replace('.', ',')}</p>
           <p><strong>Data da compra:</strong> ${purchasedAt.toLocaleDateString('pt-BR')}</p>
@@ -160,12 +156,9 @@ export async function GET() {
     }
     const purchasedAt = new Date(profile.subscription_started_at);
     
-    const now = new Date();
-    const diffTime = now.getTime() - purchasedAt.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const daysRemaining = REFUND_DAYS - diffDays;
+    const { elegivel, diasRestantes: daysRemaining, diasDesdeCompra: diffDays } = prazoReembolso(purchasedAt);
 
-    if (daysRemaining <= 0) {
+    if (!elegivel) {
       return NextResponse.json({ 
         eligible: false, 
         reason: 'Prazo de 7 dias excedido',

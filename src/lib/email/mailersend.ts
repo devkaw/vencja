@@ -14,9 +14,9 @@ export async function sendVerificationEmail(to: string, name: string, verifyUrl:
     const html = verificationEmailTemplate(name, verifyUrl);
 
     const data = await resend.emails.send({
-      from: `"VenceJa" <${process.env.RESEND_FROM_EMAIL}>`,
+      from: `"VenceJá" <${process.env.RESEND_FROM_EMAIL}>`,
       to,
-      subject: 'Confirme seu email - VenceJa',
+      subject: 'Confirme seu email - VenceJá',
       html,
     });
 
@@ -48,9 +48,9 @@ export async function sendResetPasswordEmail(to: string, name: string, resetUrl:
     const html = resetPasswordEmailTemplate(name, resetUrl);
 
     const data = await resend.emails.send({
-      from: `"VenceJa" <${process.env.RESEND_FROM_EMAIL}>`,
+      from: `"VenceJá" <${process.env.RESEND_FROM_EMAIL}>`,
       to,
-      subject: 'Recuperar senha - VenceJa',
+      subject: 'Recuperar senha - VenceJá',
       html,
     });
 

@@ -1,26 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { User, CheckCircle, Key, Shield, Lock, Crown, Mail, AlertTriangle, Zap, X, LogOut, Trash2, RefreshCw, AlertCircle, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { User, CheckCircle2, Key, Shield, Lock, Gem, AlertTriangle, X, Trash2, RefreshCw, Check, Sparkles, Palette, BellRing, Download, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { GlassCard as Card } from '@/components/screens/kit/glass-card';
+import { NotificationSettings } from '@/components/screens/kit/notification-settings';
 import { Modal } from '@/components/ui/modal';
+import { Skeleton, PageHeaderSkeleton } from '@/components/ui/skeleton';
+import { PageHero } from '@/components/screens/kit/page-hero';
+import { Avatar } from '@/components/data/avatar';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { createClient } from '@/lib/supabase/client';
 import { useAppStore } from '@/lib/store';
+import { erroDeSenha } from '@/lib/domain/senha';
 import { hasPremiumAccess, PLANS } from '@/lib/subscription';
+import { cn } from '@/lib/utils';
+import { ASSUNTO_SUPORTE_PRO, EMPRESA, PRAZO_ATENDIMENTO, PRAZO_SUPORTE_PRO } from '@/lib/legal';
 import type { Profile } from '@/types';
-import { motion } from 'framer-motion';
-
-const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } };
-const stagger = { animate: { transition: { staggerChildren: 0.06 } } };
 
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="space-y-6"><PageHeaderSkeleton /><Skeleton className="h-72 rounded-3xl" /></div>}>
+      <SettingsContent />
+    </Suspense>
+  );
+}
+
+function SettingsContent() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [passwordModal, setPasswordModal] = useState(false);
@@ -34,7 +48,8 @@ export default function SettingsPage() {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [activeSection, setActiveSection] = useState('profile');
+  const searchParamsIniciais = useSearchParams();
+  const [activeSection, setActiveSection] = useState(() => searchParamsIniciais.get('secao') || 'profile');
   
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
@@ -52,7 +67,6 @@ export default function SettingsPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    setMounted(true);
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -90,15 +104,17 @@ export default function SettingsPage() {
 
   const handleUpdateName = async () => {
     const { error } = await supabase.auth.updateUser({ data: { name } });
-    if (error) { addToast('error', 'Erro ao atualizar nome'); return; }
-    addToast('success', 'Nome atualizado com sucesso!');
+    if (error) { addToast('error', 'Não foi possível atualizar o nome.'); return; }
+    addToast('success', 'Nome atualizado.');
   };
 
   const handleChangePassword = async () => {
+    const erroSenha = erroDeSenha(newPassword);
+    if (erroSenha) { setResetError(erroSenha); return; }
     if (resetToken) {
       setIsResetting(true);
       setResetError('');
-      if (newPassword.length < 6) { setResetError('A senha deve ter pelo menos 6 caracteres'); setIsResetting(false); return; }
+      
       if (newPassword !== confirmPassword) { setResetError('As senhas não coincidem'); setIsResetting(false); return; }
 
       try {
@@ -120,7 +136,7 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!deletePassword) { addToast('error', 'Digite sua senha'); return; }
+    if (!deletePassword) { addToast('error', 'Digite sua senha para confirmar.'); return; }
     setIsDeleting(true);
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -129,7 +145,7 @@ export default function SettingsPage() {
     });
 
     if (signInError) {
-      addToast('error', 'Senha incorreta');
+      addToast('error', 'Senha incorreta.');
       setIsDeleting(false);
       return;
     }
@@ -151,7 +167,7 @@ export default function SettingsPage() {
 
   const handleCancelSubscription = async () => {
     if (!cancelConfirmed) {
-      addToast('error', 'Confirme que você entende os termos do cancelamento');
+      addToast('error', 'Marque a confirmação para continuar.');
       return;
     }
     setIsSubmitting(true);
@@ -175,7 +191,7 @@ export default function SettingsPage() {
       setShowCancelModal(false);
       setCancelReason('');
       setCancelSuccess(true);
-      addToast('success', 'Solicitação de cancelamento enviada com sucesso');
+      addToast('success', 'Pedido de cancelamento enviado.');
       window.location.reload();
     } catch (error) {
       addToast('error', 'Erro ao processar solicitação');
@@ -185,7 +201,7 @@ export default function SettingsPage() {
 
   const handleRequestRefund = async () => {
     if (!refundReason) {
-      addToast('error', 'Por favor, selecione um motivo');
+      addToast('error', 'Escolha um motivo para continuar.');
       return;
     }
     
@@ -209,7 +225,7 @@ export default function SettingsPage() {
       setCancellationType('refund');
       setShowRefundModal(false);
       setRefundReason('');
-      addToast('success', 'Solicitação de reembolso enviada com sucesso');
+      addToast('success', 'Pedido de reembolso enviado.');
       window.location.reload();
     } catch (error) {
       addToast('error', 'Erro ao processar solicitação');
@@ -217,396 +233,463 @@ export default function SettingsPage() {
     setIsSubmitting(false);
   };
 
-  const cancellationTypeDisplay = cancellationType === 'cancel' ? 'Cancelamento' : 'Reembolso';
 
   const isPro = hasPremiumAccess(profile);
 
   const sections = [
-    { id: 'profile', label: 'Perfil', icon: User, description: 'Gerencie suas informações pessoais' },
-    { id: 'security', label: 'Segurança', icon: Shield, description: 'Senha e configurações de segurança' },
-    { id: 'plan', label: 'Plano', icon: Crown, description: 'Seu plano e limitações' },
-    { id: 'danger', label: 'Zona de Perigo', icon: AlertTriangle, description: 'Ações irreversíveis', danger: true },
+    { id: 'profile', label: 'Perfil', icon: User },
+    { id: 'avisos', label: 'Avisos', icon: BellRing },
+    { id: 'security', label: 'Segurança', icon: Shield },
+    { id: 'plan', label: 'Plano', icon: Gem },
+    { id: 'appearance', label: 'Aparência', icon: Palette },
+    { id: 'dados', label: 'Seus dados', icon: Download },
+    { id: 'danger', label: 'Excluir conta', icon: AlertTriangle, danger: true },
   ];
 
-  if (isLoading) return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-extralight tracking-tight">Configurações</h1>
-      <div className="glass-card rounded-2xl p-8 animate-pulse" />
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="space-y-6" role="status" aria-label="Carregando configurações">
+        <PageHeaderSkeleton />
+        <Skeleton className="h-72 rounded-3xl" />
+      </div>
+    );
+
+  const endsAt = profile?.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR') : null;
 
   return (
-    <motion.div initial="initial" animate="animate" variants={stagger} className="space-y-6">
-      <motion.div variants={fadeIn}>
-        <h1 className="text-3xl font-extralight tracking-tight">Configurações</h1>
-        <p className="text-slate-400 font-light mt-1">Gerencie sua conta e preferências</p>
-      </motion.div>
+    <div className="space-y-6">
+      <PageHero eyebrow="Configurações" title="Sua conta," highlight="do seu jeito." description="Perfil, avisos, plano e preferências." />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <motion.div variants={fadeIn} className="space-y-2">
-          {sections.map(section => (
-            <button 
-              key={section.id} 
-              onClick={() => setActiveSection(section.id)} 
-              className={`w-full glass-card rounded-xl p-4 text-left hover-lift transition-all ${activeSection === section.id ? (section.danger ? 'border-danger' : 'border-accent') : ''} ${section.danger ? 'hover:border-danger/50' : ''}`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeSection === section.id ? (section.danger ? 'bg-danger/20 text-danger' : 'bg-accent/20 text-accent') : 'bg-white/5 text-slate-400'}`}>
-                  <section.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className={`font-light ${section.danger ? 'text-danger' : ''}`}>{section.label}</p>
-                  <p className="text-xs text-slate-500">{section.description}</p>
-                </div>
-              </div>
-            </button>
-          ))}
-        </motion.div>
+      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+        <nav aria-label="Seções das configurações" className="-mx-4 overflow-x-auto px-4 hide-scrollbar lg:mx-0 lg:px-0">
+          <ul className="flex gap-1 lg:flex-col">
+            {sections.map((section) => {
+              const active = activeSection === section.id;
+              return (
+                <li key={section.id}>
+                  <button
+                    onClick={() => setActiveSection(section.id)}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'flex h-10 w-full items-center gap-2.5 whitespace-nowrap rounded-xl px-3 text-sm font-medium transition-[background-color,color,transform] duration-300 ease-spring hover:scale-[1.04] active:scale-95',
+                      active
+                        ? section.danger
+                          ? 'bg-neg-soft text-neg'
+                          : 'bg-brand-soft text-brand-ink'
+                        : section.danger
+                          ? 'text-neg hover:bg-neg-soft'
+                          : 'text-ink-2 hover:bg-ink/[0.04] hover:text-ink'
+                    )}
+                  >
+                    <section.icon className="size-4" />
+                    {section.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-        <motion.div variants={fadeIn} className="lg:col-span-3">
+        <motion.div key={activeSection} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
           {activeSection === 'profile' && (
-            <div className="glass-card rounded-2xl p-6 space-y-6">
-              <div className="flex items-center gap-4 pb-6 border-b border-white/10">
-                <div className="w-16 h-16 bg-gradient-to-br from-accent to-accent/50 rounded-2xl flex items-center justify-center">
-                  <span className="text-2xl font-extralight text-black">{name?.charAt(0).toUpperCase() || 'U'}</span>
-                </div>
-                <div>
-                  <h2 className="text-xl font-light">{name || 'Usuário'}</h2>
-                  <p className="text-slate-400 text-sm">{email}</p>
+            <Card className="p-5 sm:p-6">
+              <div className="flex items-center gap-4 border-b border-line pb-5">
+                <Avatar name={name || email || 'U'} size="xl" />
+                <div className="min-w-0">
+                  <h2 className="truncate text-lg font-semibold text-ink">{name || 'Sem nome'}</h2>
+                  <p className="truncate text-sm text-ink-3">{email}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm text-slate-400 font-light">Nome</label>
-                  <input 
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white font-light focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-slate-400 font-light">Email</label>
-                  <input 
-                    type="email"
-                    value={email}
-                    disabled
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-slate-500 font-light cursor-not-allowed"
-                  />
-                </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <Input label="Seu nome" value={name} onChange={(e) => setName(e.target.value)} hint="Assina as mensagens de cobrança do WhatsApp." />
+                <Input label="E-mail" type="email" value={email} disabled hint="Para trocar o e-mail, fale com o suporte." />
               </div>
-              <div className="flex justify-end">
-                <Button onClick={handleUpdateName} className="bg-accent text-black">Salvar Alterações</Button>
+              <div className="mt-6 flex justify-end">
+                <Button onClick={handleUpdateName}>Salvar alterações</Button>
               </div>
-            </div>
+            </Card>
           )}
 
+          {activeSection === 'avisos' && <NotificationSettings />}
+
           {activeSection === 'security' && (
-            <div className="space-y-4">
-              <div className="glass-card rounded-2xl p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
-                      <Lock className="w-6 h-6 text-slate-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-light">Senha</h3>
-                      <p className="text-xs text-slate-500">Última alteração: nunca</p>
-                    </div>
+            <Card className="p-5 sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-surface-3 text-ink-2">
+                    <Lock className="size-5" />
+                  </span>
+                  <div>
+                    <h3 className="font-semibold text-ink">Senha</h3>
+                    <p className="text-sm text-ink-3">Use pelo menos 8 caracteres.</p>
                   </div>
-                  <Button variant="outline" onClick={() => setPasswordModal(true)}>Alterar Senha</Button>
                 </div>
+                <Button variant="secondary" onClick={() => setPasswordModal(true)}>
+                  <Key />
+                  Alterar senha
+                </Button>
               </div>
-              <div className="glass-card rounded-2xl p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
-                      <Key className="w-6 h-6 text-slate-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-light">Autenticação em duas etapas</h3>
-                      <p className="text-xs text-slate-500">Adicione uma camada extra de segurança</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-white/5 text-slate-400 text-xs">Em breve</Badge>
-                </div>
-              </div>
-            </div>
+            </Card>
           )}
 
           {activeSection === 'plan' && (
-            <div className="space-y-4">
-              <div className={`glass-card rounded-2xl p-6 border-2 ${isPro ? 'border-accent' : ''}`}>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${isPro ? 'bg-accent/20' : 'bg-white/5'}`}>
-                          <Crown className={`w-7 h-7 ${isPro ? 'text-accent' : 'text-slate-400'}`} />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-light">{isPro ? 'Plano Pro' : 'Plano Grátis'}</h3>
-                          <p className="text-slate-400 text-sm">
-                            {isPro 
-                              ? cancellationStatus === 'pending' 
-                                ? cancellationType === 'refund' 
-                                  ? `Reembolso em análise - Processamento em até 24h`
-                                  : `Cancelamento em análise - Processamento em até 24h`
-                                : profile?.subscription_status === 'canceled' 
-                                  ? `Acesso até ${profile?.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR') : 'fim do período'}`
-                                  : 'Acesso completo e ilimitado'
-                              : `${PLANS.free.limits.maxClients} clientes, ${PLANS.free.limits.maxCharges} cobranças`}
-                          </p>
-                        </div>
-                      </div>
-                      {isPro && (
-                        cancellationStatus === 'pending' 
-                          ? <Badge className="bg-yellow-500/20 text-yellow-500">Em análise</Badge>
-                          : profile?.subscription_status === 'canceled'
-                            ? <Badge className="bg-orange-500/20 text-orange-500">Cancelado</Badge>
-                            : <Badge className="bg-accent/20 text-accent">Ativo</Badge>
-                      )}
+            <Card className={cn('overflow-hidden', isPro && 'border-brand-500/30')}>
+              <div className={cn('relative p-5 sm:p-6', isPro && 'bg-gradient-to-br from-brand-soft/80 to-transparent')}>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className={cn('flex size-12 items-center justify-center rounded-2xl', isPro ? 'glass-brand text-white' : 'bg-surface-3 text-ink-2')}>
+                      <Gem className="size-5" />
+                    </span>
+                    <div>
+                      <h3 className="font-display text-xl font-semibold text-ink">{isPro ? 'Plano Pro' : 'Plano Grátis'}</h3>
+                      <p className="text-sm text-ink-3">
+                        {isPro
+                          ? cancellationStatus === 'pending'
+                            ? cancellationType === 'refund'
+                              ? `Reembolso em análise · resposta em até ${PRAZO_ATENDIMENTO}`
+                              : `Cancelamento em análise · resposta em até ${PRAZO_ATENDIMENTO}`
+                            : profile?.subscription_status === 'canceled'
+                              ? `Acesso garantido até ${endsAt || 'o fim do período'}`
+                              : 'Clientes e cobranças ilimitados'
+                          : `Até ${PLANS.free.limits.maxClients} clientes e ${PLANS.free.limits.maxCharges} cobranças`}
+                      </p>
                     </div>
+                  </div>
+                  {isPro &&
+                    (cancellationStatus === 'pending' ? (
+                      <Badge variant="warning" dot>
+                        Em análise
+                      </Badge>
+                    ) : profile?.subscription_status === 'canceled' ? (
+                      <Badge variant="warning" dot>
+                        Cancelado
+                      </Badge>
+                    ) : (
+                      <Badge variant="success" dot>
+                        Ativo
+                      </Badge>
+                    ))}
+                </div>
+
                 {isPro ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10">
-                      <div className="text-center">
-                        <p className="text-2xl font-extralight text-accent">∞</p>
-                        <p className="text-xs text-slate-500">Clientes</p>
+                  <div className="mt-6 space-y-5">
+                    <dl className="grid grid-cols-3 gap-3 rounded-2xl border border-line bg-surface p-4 text-center dark:bg-surface-2">
+                      <div>
+                        <dt className="text-xs text-ink-3">Clientes</dt>
+                        <dd className="mt-0.5 font-semibold text-ink">Ilimitados</dd>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xl font-extralight text-accent">
-                          {profile?.subscription_ends_at 
-                            ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-                            : '-'}
-                        </p>
-                        <p className="text-xs text-slate-500">Próxima cobrança</p>
+                      <div>
+                        <dt className="text-xs text-ink-3">{profile?.subscription_status === 'canceled' ? 'Acesso até' : 'Renova em'}</dt>
+                        <dd className="mt-0.5 font-semibold text-ink tnum">
+                          {profile?.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '—'}
+                        </dd>
                       </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-extralight text-accent">✓</p>
-                        <p className="text-xs text-slate-500">WhatsApp</p>
+                      <div>
+                        <dt className="text-xs text-ink-3">WhatsApp</dt>
+                        <dd className="mt-0.5 font-semibold text-pos">Liberado</dd>
                       </div>
+                    </dl>
+
+                    <div className="flex flex-col gap-3 rounded-2xl border border-brand-500/25 bg-brand-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <LifeBuoy className="mt-0.5 size-5 shrink-0 text-brand-ink" />
+                        <div>
+                          <p className="text-sm font-semibold text-ink">Suporte prioritário</p>
+                          <p className="text-sm text-ink-2">Como assinante Pro, você recebe resposta em até {PRAZO_SUPORTE_PRO}.</p>
+                        </div>
+                      </div>
+                      <Button asChild variant="secondary" size="sm" className="shrink-0">
+                        <a href={`mailto:${EMPRESA.emailSuporte}?subject=${encodeURIComponent(ASSUNTO_SUPORTE_PRO)}&body=${encodeURIComponent(`Conta: ${profile?.email || ''}\n\nComo podemos ajudar?\n`)}`}>Falar com o suporte</a>
+                      </Button>
                     </div>
-                    
+
                     {cancellationStatus !== 'pending' && (
-                      <div className="pt-4 border-t border-white/10 space-y-3">
+                      <div className="space-y-3 border-t border-line pt-5">
                         {refundEligible && (
-                          <div className="text-sm text-slate-400 mb-2">
-                            <span className="text-accent">{refundDaysRemaining}</span> dias restantes para solicitar reembolso
-                          </div>
+                          <p className="text-sm text-ink-2">
+                            {refundDaysRemaining === 0 ? <>Hoje é o <strong className="text-ink">último dia</strong> para pedir reembolso integral.</> : <>Você ainda tem <strong className="text-ink tnum">{refundDaysRemaining} {refundDaysRemaining === 1 ? 'dia' : 'dias'}</strong> para pedir reembolso integral.</>}
+                          </p>
                         )}
-                        <div className="flex gap-3">
-                          <Button 
-                            variant="outline" 
-                            className="flex-1 border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
-                            onClick={() => setShowCancelModal(true)}
-                          >
-                            <X className="w-4 h-4 mr-2" />Cancelar Assinatura
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Button variant="secondary" onClick={() => setShowCancelModal(true)}>
+                            <X />
+                            Cancelar assinatura
                           </Button>
                           {refundEligible && (
-                            <Button 
-                              variant="outline" 
-                              className="flex-1 border-danger/50 text-danger hover:bg-danger/10"
-                              onClick={() => setShowRefundModal(true)}
-                            >
-                              <RefreshCw className="w-4 h-4 mr-2" />Solicitar Reembolso
+                            <Button variant="danger-soft" onClick={() => setShowRefundModal(true)}>
+                              <RefreshCw />
+                              Pedir reembolso
                             </Button>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500">
-                          {!refundEligible && cancellationStatus !== 'pending' && 'Prazo de 7 dias para reembolso excedido'}
-                        </p>
+                        {!refundEligible && <p className="text-xs text-ink-3">O prazo de 7 dias para reembolso já passou.</p>}
                       </div>
                     )}
 
                     {cancellationStatus === 'pending' && cancellationType === 'refund' && (
-                      <div className="pt-4 border-t border-white/10">
-                        <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                          <p className="text-sm text-blue-500">
-                            <strong>Sua solicitação de reembolso está em análise.</strong>
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            Processamento em até 24 horas. Você manterá acesso ao Plano Pro enquanto o reembolso é processado.
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            Após aprovação, o valor será estornado em até 5 dias úteis.
-                          </p>
-                        </div>
+                      <div className="rounded-2xl border border-info/25 bg-info-soft p-4 text-sm">
+                        <p className="font-semibold text-info">Seu pedido de reembolso está em análise.</p>
+                        <p className="mt-1 text-ink-2">Resposta em até {PRAZO_ATENDIMENTO}. Você continua com o Pro enquanto isso. Depois de aprovado, o estorno leva até 5 dias úteis.</p>
                       </div>
                     )}
 
                     {cancellationStatus === 'pending' && cancellationType === 'cancel' && (
-                      <div className="pt-4 border-t border-white/10">
-                        <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                          <p className="text-sm text-yellow-500">
-                            <strong>Sua solicitação de cancelamento está em análise.</strong>
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            Processamento em até 24 horas. Você manterá acesso ao Plano Pro até o fim do período pago ({profile?.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR') : 'verificando...'}).
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            Após essa data, seu plano será automaticamente alterado para o plano gratuito.
-                          </p>
-                        </div>
+                      <div className="rounded-2xl border border-warn/25 bg-warn-soft p-4 text-sm">
+                        <p className="font-semibold text-warn">Seu pedido de cancelamento está em análise.</p>
+                        <p className="mt-1 text-ink-2">
+                          Resposta em até {PRAZO_ATENDIMENTO}. Você mantém o Pro até o fim do período pago ({endsAt || 'verificando…'}). Depois disso, a conta volta para o plano grátis.
+                        </p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="pt-4 border-t border-white/10">
-                    <Link href="/dashboard/upgrade">
-                      <Button className="w-full bg-accent text-black">
-                        <Zap className="w-4 h-4 mr-2" />Fazer Upgrade - R$ 49,90/mês
-                      </Button>
-                    </Link>
+                  <div className="mt-6 border-t border-line pt-5">
+                    <ul className="mb-5 grid gap-2 text-sm text-ink-2 sm:grid-cols-2">
+                      {PLANS.pro.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2">
+                          <Check className="size-4 text-pos" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button asChild size="lg" className="w-full sm:w-auto">
+                      <Link href="/dashboard/upgrade">
+                        <Sparkles />
+                        Assinar o Pro · R$ 49,90/mês
+                      </Link>
+                    </Button>
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
+          )}
+
+          {activeSection === 'appearance' && (
+            <Card className="p-5 sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-semibold text-ink">Tema</h3>
+                  <p className="text-sm text-ink-3">Claro para o dia, escuro para a noite. A escolha fica salva neste aparelho.</p>
+                </div>
+                <div className="w-full sm:w-48">
+                  <ThemeToggle withLabel className="border border-line" />
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {activeSection === 'dados' && (
+            <Card className="p-5 sm:p-6">
+              <h2 className="font-display text-lg font-semibold text-ink">Seus dados</h2>
+              <p className="mt-1 text-sm text-ink-3">Baixe uma cópia da sua conta, dos seus clientes, cobranças e pagamentos em um arquivo JSON.</p>
+              <Button asChild variant="secondary" className="mt-4">
+                <a href="/api/account/export" download>
+                  <Download />
+                  Baixar meus dados
+                </a>
+              </Button>
+              <p className="mt-4 text-sm text-ink-3">
+                Saiba mais na <Link href="/privacidade" className="font-medium text-brand-ink underline underline-offset-2">Política de Privacidade</Link> e em <Link href="/exclusao-de-dados" className="font-medium text-brand-ink underline underline-offset-2">exclusão de dados</Link>.
+              </p>
+            </Card>
           )}
 
           {activeSection === 'danger' && (
-            <div className="space-y-4">
-              <div className="glass-card rounded-2xl p-6 border border-danger/30">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-danger/10 rounded-xl flex items-center justify-center">
-                    <AlertTriangle className="w-6 h-6 text-danger" />
-                  </div>
-                  <div>
-                    <h3 className="font-light text-danger">Zona de Perigo</h3>
-                    <p className="text-xs text-slate-500">Ações irreversíveis</p>
-                  </div>
+            <Card className="border-neg/30 p-5 sm:p-6">
+              <div className="flex items-start gap-4">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-neg-soft text-neg">
+                  <AlertTriangle className="size-5" />
+                </span>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-ink">Excluir minha conta</h3>
+                  <p className="mt-1 text-sm text-ink-3">Apaga sua conta, seus clientes e todas as cobranças de forma permanente. Não dá para desfazer.</p>
+                  {isPro && <p className="mt-2 text-sm text-warn">Se você tem uma assinatura ativa, cancele antes para não ser cobrado de novo.</p>}
+                  <Button variant="danger" onClick={() => setDeleteModal(true)} className="mt-5">
+                    <Trash2 />
+                    Excluir minha conta
+                  </Button>
                 </div>
-                <Button variant="danger" onClick={() => setDeleteModal(true)} className="w-full">
-                  <Trash2 className="w-4 h-4 mr-2" />Excluir Minha Conta
-                </Button>
-                <p className="text-xs text-slate-500 mt-3 text-center">Esta ação não pode ser desfeita. Todos os seus dados serão excluídos permanentemente.</p>
               </div>
-            </div>
+            </Card>
           )}
         </motion.div>
       </div>
 
-      <Modal isOpen={passwordModal} onClose={() => { setPasswordModal(false); setResetPassword(false); setResetToken(''); setNewPassword(''); setConfirmPassword(''); }} title={resetPassword ? 'Nova Senha' : 'Alterar Senha'} size="sm">
+      <Modal
+        isOpen={passwordModal}
+        onClose={() => {
+          setPasswordModal(false);
+          setResetPassword(false);
+          setResetToken('');
+          setNewPassword('');
+          setConfirmPassword('');
+        }}
+        title={resetPassword ? 'Crie uma nova senha' : 'Alterar senha'}
+        icon={<Key />}
+        size="sm"
+      >
         {resetSuccess ? (
-          <div className="text-center py-6">
-            <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-accent" />
+          <div className="py-6 text-center">
+            <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-pos-soft text-pos">
+              <CheckCircle2 className="size-7" />
             </div>
-            <p className="font-light">Senha alterada com sucesso!</p>
+            <p className="font-semibold text-ink">Senha alterada.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {resetError && <div className="p-3 bg-danger/10 border border-danger/30 rounded-lg text-sm text-danger">{resetError}</div>}
-            <div className="space-y-2">
-              <label className="text-sm text-slate-400 font-light">Nova Senha</label>
-              <input 
-                type="password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 font-light focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm text-slate-400 font-light">Confirmar Senha</label>
-              <input 
-                type="password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="Repita a senha"
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 font-light focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-              />
-            </div>
-            <div className="flex gap-3 justify-end">
-              <Button variant="ghost" onClick={() => { setPasswordModal(false); setResetPassword(false); setNewPassword(''); setConfirmPassword(''); }}>Cancelar</Button>
-              <Button onClick={handleChangePassword} isLoading={isResetting} className="bg-accent text-black">Alterar Senha</Button>
+            {resetError && (
+              <div className="rounded-xl border border-neg/25 bg-neg-soft p-3 text-sm text-neg" role="alert">
+                {resetError}
+              </div>
+            )}
+            <Input label="Nova senha" type="password" showPasswordToggle value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo de 8 caracteres" autoComplete="new-password" />
+            <Input label="Confirme a nova senha" type="password" showPasswordToggle value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a senha" autoComplete="new-password" />
+            <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setPasswordModal(false);
+                  setResetPassword(false);
+                  setNewPassword('');
+                  setConfirmPassword('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleChangePassword} isLoading={isResetting}>
+                Salvar nova senha
+              </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      <Modal isOpen={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir Conta" size="sm">
+      <Modal
+        isOpen={deleteModal}
+        onClose={() => setDeleteModal(false)}
+        title="Excluir sua conta?"
+        description="Todos os seus dados serão apagados de forma permanente."
+        icon={<Trash2 />}
+        tone="danger"
+        size="sm"
+      >
         <div className="space-y-4">
-          <p className="text-sm text-slate-400">Esta ação é irreversível. Todos os seus dados serão excluídos permanentemente.</p>
-          <div className="space-y-2">
-            <label className="text-sm text-slate-400 font-light">Digite sua senha para confirmar</label>
-            <input 
-              type="password"
-              value={deletePassword}
-              onChange={e => setDeletePassword(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 font-light focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-            />
-          </div>
-          <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => { setDeleteModal(false); setDeletePassword(''); }}>Cancelar</Button>
-            <Button variant="danger" onClick={handleDeleteAccount} isLoading={isDeleting}>Excluir Conta</Button>
+          <Input label="Digite sua senha para confirmar" type="password" showPasswordToggle value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} autoComplete="current-password" />
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDeleteModal(false);
+                setDeletePassword('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleDeleteAccount} isLoading={isDeleting}>
+              Excluir conta para sempre
+            </Button>
           </div>
         </div>
       </Modal>
 
-      <Modal isOpen={showCancelModal} onClose={() => { setShowCancelModal(false); setCancelReason(''); setCancelConfirmed(false); }} title="Cancelar Assinatura" size="sm">
+      <Modal
+        isOpen={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false);
+          setCancelReason('');
+          setCancelConfirmed(false);
+        }}
+        title="Cancelar assinatura"
+        icon={<X />}
+        size="sm"
+      >
         <div className="space-y-4">
-          <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm text-slate-300">
-            <p><strong>Atenção:</strong> Ao cancelar, você perderá acesso ao plano Pro no fim do período pago ({profile?.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleDateString('pt-BR') : 'em breve'}).</p>
-            <p className="mt-2 text-yellow-500">O reembolso só é possível dentro de 7 dias após a compra.</p>
+          <div className="rounded-xl border border-warn/25 bg-warn-soft p-3.5 text-sm text-ink-2">
+            <p>
+              Você mantém o Pro até o fim do período pago (<strong>{endsAt || 'em breve'}</strong>). Depois, a conta volta para o plano grátis.
+            </p>
+            <p className="mt-2 font-medium text-warn">Reembolso só é possível em até 7 dias após a compra.</p>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-slate-400 font-light">Nos ajude a melhorar (opcional)</label>
-            <select 
-              value={cancelReason}
-              onChange={e => setCancelReason(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white font-light focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
+          <Select
+            label="Por que está cancelando? (opcional)"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            options={[
+              { value: '', label: 'Escolha um motivo' },
+              { value: 'Muito caro', label: 'Muito caro' },
+              { value: 'Não estou usando', label: 'Não estou usando' },
+              { value: 'Encontrou outro produto', label: 'Encontrei outro produto' },
+              { value: 'Falta de tempo', label: 'Falta de tempo' },
+              { value: 'Outro', label: 'Outro' },
+            ]}
+          />
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-surface-2 p-3.5 text-sm text-ink-2 dark:bg-surface-3/60">
+            <input type="checkbox" className="mt-0.5 size-4 shrink-0 accent-brand-600" checked={cancelConfirmed} onChange={(e) => setCancelConfirmed(e.target.checked)} />
+            Entendo que estou pedindo o cancelamento e que, depois deste pedido, não terei direito a reembolso.
+          </label>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowCancelModal(false);
+                setCancelReason('');
+                setCancelConfirmed(false);
+              }}
             >
-              <option value="">Selecione um motivo...</option>
-              <option value="Muito caro">Muito caro</option>
-              <option value="Não estou usando">Não estou usando</option>
-              <option value="Encontrou outro produto">Encontrou outro produto</option>
-              <option value="Falta de tempo">Falta de tempo</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div className="p-3 bg-white/5 rounded-lg">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="mt-1 w-4 h-4 accent-accent" 
-                checked={cancelConfirmed}
-                onChange={(e) => setCancelConfirmed(e.target.checked)}
-              />
-              <span className="text-sm text-slate-400">Entendo que estou solicitando o cancelamento e que não terei direito a reembolso após este pedido.</span>
-            </label>
-          </div>
-          <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => { setShowCancelModal(false); setCancelReason(''); setCancelConfirmed(false); }}>Voltar</Button>
-            <Button onClick={handleCancelSubscription} isLoading={isSubmitting} className="bg-yellow-500 text-black">Confirmar Cancelamento</Button>
+              Manter o Pro
+            </Button>
+            <Button variant="danger" onClick={handleCancelSubscription} isLoading={isSubmitting}>
+              Confirmar cancelamento
+            </Button>
           </div>
         </div>
       </Modal>
 
-      <Modal isOpen={showRefundModal} onClose={() => { setShowRefundModal(false); setRefundReason(''); }} title="Solicitar Reembolso" size="sm">
+      <Modal
+        isOpen={showRefundModal}
+        onClose={() => {
+          setShowRefundModal(false);
+          setRefundReason('');
+        }}
+        title="Pedir reembolso"
+        icon={<RefreshCw />}
+        size="sm"
+      >
         <div className="space-y-4">
-          <div className="p-3 bg-accent/10 border border-accent/30 rounded-lg text-sm text-slate-300">
-            <p className="text-accent font-medium">Prazo: {refundDaysRemaining} dias restantes</p>
-            <p className="mt-1">Você tem direito ao reembolso total dentro de 7 dias após a compra.</p>
+          <div className="rounded-xl border border-brand-500/25 bg-brand-soft/60 p-3.5 text-sm text-ink-2">
+            <p className="font-semibold text-brand-ink">
+              {refundDaysRemaining === 0 ? 'Hoje é o último dia do prazo.' : `Faltam ${refundDaysRemaining} ${refundDaysRemaining === 1 ? 'dia' : 'dias'} do prazo.`}
+            </p>
+            <p className="mt-1">O reembolso é integral dentro de 7 dias após a compra.</p>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm text-slate-400 font-light">Motivo do reembolso *</label>
-            <select 
-              value={refundReason}
-              onChange={e => setRefundReason(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white font-light focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
+          <Select
+            label="Motivo do reembolso"
+            value={refundReason}
+            onChange={(e) => setRefundReason(e.target.value)}
+            options={[
+              { value: '', label: 'Escolha um motivo' },
+              { value: 'Não gostei do produto', label: 'Não gostei do produto' },
+              { value: 'Não funcionou como esperado', label: 'Não funcionou como esperado' },
+              { value: 'Comprei por engano', label: 'Comprei por engano' },
+              { value: 'Outro', label: 'Outro' },
+            ]}
+          />
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowRefundModal(false);
+                setRefundReason('');
+              }}
             >
-              <option value="">Selecione um motivo...</option>
-              <option value="Não gostei do produto">Não gostei do produto</option>
-              <option value="Não funcionou como esperado">Não funcionou como esperado</option>
-              <option value="Comprei por engano">Comprei por engano</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => { setShowRefundModal(false); setRefundReason(''); }}>Cancelar</Button>
-            <Button onClick={handleRequestRefund} isLoading={isSubmitting} className="bg-danger text-white">Solicitar Reembolso</Button>
+              Voltar
+            </Button>
+            <Button variant="danger" onClick={handleRequestRefund} isLoading={isSubmitting}>
+              Pedir reembolso
+            </Button>
           </div>
         </div>
       </Modal>
-    </motion.div>
+    </div>
   );
 }

@@ -7,29 +7,31 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check:producao": "node scripts/check-producao.mjs"
   },
   "dependencies": {
-    "@react-email/components": "^0.0.25",
     "@sentry/nextjs": "^10.78.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
     "@vercel/analytics": "^2.0.1",
     "autoprefixer": "^10.4.27",
-    "chart.js": "^4.5.1",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.468.0",
     "next": "^16.4.4",
+    "radix-ui": "^1.4.2",
     "react": "^19.0.0",
-    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.0.0",
     "resend": "^6.12.2",
     "tailwind-merge": "^2.6.0",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@tailwindcss/container-queries": "^0.1.1",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
@@ -37,6 +39,7 @@
     "eslint-config-next": "^16.4.4",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^5.1.0"
   }
 }

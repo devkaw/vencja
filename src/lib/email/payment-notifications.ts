@@ -1,4 +1,6 @@
 import { Resend } from 'resend';
+import type { DailyDigest } from '@/lib/domain/digest';
+import { dailyDigestEmailTemplate } from '@/emails/templates/daily-digest-email';
 import { paymentConfirmedEmailTemplate, paymentRejectedEmailTemplate, subscriptionCanceledEmailTemplate, cancellationRequestReceivedEmailTemplate, refundRequestReceivedEmailTemplate } from '@/emails/templates/payment-email';
 import { orderReceivedEmailTemplate } from '@/emails/templates/order-received-email';
 import { renewalReminderEmailTemplate, renewalConfirmedEmailTemplate } from '@/emails/templates/renewal-email';
@@ -6,7 +8,7 @@ import { refundEmailTemplate } from '@/emails/templates/refund-email';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to: string, subject: string, html: string, headers?: Record<string, string>) {
   if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM_EMAIL) {
     console.error('Resend credentials not configured');
     return { success: false, error: { message: 'Resend credentials not configured' } };
@@ -14,10 +16,11 @@ async function sendEmail(to: string, subject: string, html: string) {
 
   try {
     const data = await resend.emails.send({
-      from: `"VenceJa" <${process.env.RESEND_FROM_EMAIL}>`,
+      from: `"VenceJá" <${process.env.RESEND_FROM_EMAIL}>`,
       to,
       subject,
       html,
+      headers,
     });
 
     console.log(`Resend email sent: ${subject}`, data.data?.id);
@@ -45,7 +48,7 @@ export async function sendPaymentConfirmedEmail(
   price: number
 ) {
   const html = paymentConfirmedEmailTemplate(name, planType, price);
-  return sendEmail(to, 'Pagamento confirmado! Seu Plano Pro está ativo - VenceJa', html);
+  return sendEmail(to, 'Pagamento confirmado! Seu Plano Pro está ativo - VenceJá', html);
 }
 
 export async function sendPaymentRejectedEmail(
@@ -54,12 +57,12 @@ export async function sendPaymentRejectedEmail(
   reason?: string
 ) {
   const html = paymentRejectedEmailTemplate(name, reason);
-  return sendEmail(to, 'Pagamento não processado - VenceJa', html);
+  return sendEmail(to, 'Pagamento não processado - VenceJá', html);
 }
 
 export async function sendSubscriptionCanceledEmail(to: string, name: string, endDate?: string) {
   const html = subscriptionCanceledEmailTemplate(name, endDate);
-  return sendEmail(to, 'Assinatura cancelada - VenceJa', html);
+  return sendEmail(to, 'Assinatura cancelada - VenceJá', html);
 }
 
 export async function sendCancellationRequestReceivedEmail(
@@ -69,7 +72,7 @@ export async function sendCancellationRequestReceivedEmail(
   endDate: string
 ) {
   const html = cancellationRequestReceivedEmailTemplate(name, planType, endDate);
-  return sendEmail(to, 'Solicitação de cancelamento recebida - VenceJa', html);
+  return sendEmail(to, 'Solicitação de cancelamento recebida - VenceJá', html);
 }
 
 export async function sendRefundRequestReceivedEmail(
@@ -80,7 +83,7 @@ export async function sendRefundRequestReceivedEmail(
   daysRemaining: number
 ) {
   const html = refundRequestReceivedEmailTemplate(name, planType, price, daysRemaining);
-  return sendEmail(to, 'Solicitação de reembolso recebida - VenceJa', html);
+  return sendEmail(to, 'Solicitação de reembolso recebida - VenceJá', html);
 }
 
 export async function sendOrderReceivedEmail(
@@ -91,7 +94,7 @@ export async function sendOrderReceivedEmail(
   orderNumber: string
 ) {
   const html = orderReceivedEmailTemplate(name, planType, price, orderNumber);
-  return sendEmail(to, 'Pedido recebido! Aguardando pagamento - VenceJa', html);
+  return sendEmail(to, 'Pedido recebido! Aguardando pagamento - VenceJá', html);
 }
 
 export async function sendRenewalReminderEmail(
@@ -102,7 +105,7 @@ export async function sendRenewalReminderEmail(
   nextBillingDate: string
 ) {
   const html = renewalReminderEmailTemplate(name, planType, price, nextBillingDate);
-  return sendEmail(to, 'Sua assinatura será renovada amanhã - VenceJa', html);
+  return sendEmail(to, 'Sua assinatura será renovada amanhã - VenceJá', html);
 }
 
 export async function sendRenewalConfirmedEmail(
@@ -113,7 +116,7 @@ export async function sendRenewalConfirmedEmail(
   nextBillingDate: string
 ) {
   const html = renewalConfirmedEmailTemplate(name, planType, price, nextBillingDate);
-  return sendEmail(to, 'Assinatura renovada! - VenceJa', html);
+  return sendEmail(to, 'Assinatura renovada! - VenceJá', html);
 }
 
 export async function sendRefundEmail(
@@ -123,5 +126,12 @@ export async function sendRefundEmail(
   reason?: string
 ) {
   const html = refundEmailTemplate(name, price, reason);
-  return sendEmail(to, 'Reembolso processado - VenceJa', html);
+  return sendEmail(to, 'Reembolso processado - VenceJá', html);
+}
+export async function sendDailyDigestEmail(to: string, digest: DailyDigest, linkDescadastro: string | null) {
+  const total = digest.venceHoje.length + digest.venceuOntem.length;
+  const assunto = `${total} ${total === 1 ? 'cobrança pede' : 'cobranças pedem'} sua atenção hoje`;
+  // RFC 8058: lets the mail app offer a one-click unsubscribe.
+  const headers = linkDescadastro ? { 'List-Unsubscribe': `<${linkDescadastro}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : undefined;
+  return sendEmail(to, assunto, dailyDigestEmailTemplate(digest, linkDescadastro), headers);
 }

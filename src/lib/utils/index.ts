@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { format, differenceInDays, differenceInCalendarDays, parseISO, isAfter, isBefore, startOfMonth, endOfMonth, startOfToday, addMonths, addWeeks, subMonths, getMonth, getYear } from 'date-fns';
+import { format, differenceInCalendarDays, parseISO, isAfter, isBefore, startOfMonth, endOfMonth, startOfToday, addMonths, addWeeks, subMonths, getMonth, getYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Charge } from '@/types';
 
@@ -91,75 +91,6 @@ export function gerarProximoVencimento(dataVencimento: string, periodicidade: 's
   return proximo.toISOString().split('T')[0];
 }
 
-export function calcularScore(charges: Charge[]): number {
-  if (charges.length === 0) return 80;
-
-  const pagas = charges.filter(c => c.status === 'pago' || c.status === 'parcial');
-  const pendentes = charges.filter(c => c.status === 'pendente' || c.status === 'parcial');
-  const atrasadas = charges.filter(c => c.status !== 'pago' && isVencido(c.data_vencimento));
-
-  const totalCharges = charges.length;
-  const totalPago = pagas.length;
-
-  // 1. Taxa de pagamento (0-35 pts)
-  //    Quanto maior a % de cobranças pagas, maior a nota
-  const taxaPagamento = totalPago / totalCharges;
-  const pontosTaxa = taxaPagamento * 35;
-
-  // 2. Pontualidade (0-30 pts)
-  //    Das pagas, quantas foram em dia ou antes
-  let pagasEmDia = 0;
-  let diasAtrasoMedio = 0;
-
-  pagas.forEach(c => {
-    if (!c.data_pagamento) return;
-    const vencimento = parseISO(c.data_vencimento);
-    const pagamento = parseISO(c.data_pagamento);
-    const diff = differenceInDays(pagamento, vencimento);
-    if (diff <= 0) {
-      pagasEmDia++;
-    } else {
-      diasAtrasoMedio += diff;
-    }
-  });
-
-  const taxaEmDia = totalPago > 0 ? pagasEmDia / totalPago : 0;
-  const pontosPontualidade = taxaEmDia * 30;
-
-  // 3. Severidade do atraso (0-20 pts, quanto MENOS atraso, MAIS pontos)
-  //    Penaliza dias de atraso em cobranças pagas com atraso
-  const pagasComAtraso = totalPago - pagasEmDia;
-  if (pagasComAtraso > 0) {
-    diasAtrasoMedio = diasAtrasoMedio / pagasComAtraso;
-  }
-  // Atraso médio de 0 dias = 20 pts, 30+ dias = 0 pts
-  const pontosAtraso = Math.max(0, 20 - (diasAtrasoMedio / 30) * 20);
-
-  // 4. Dívida em aberto (0-15 pts)
-  //    Penaliza cobranças ainda não pagas
-  const valorTotal = charges.reduce((s, c) => s + Number(c.valor), 0);
-  const valorPago = pagas.reduce((s, c) => s + Number(c.valor_pago || c.valor), 0);
-  const valorRestante = valorTotal - valorPago;
-  const ratioDivida = valorTotal > 0 ? valorRestante / valorTotal : 0;
-  // Sem divida = 15 pts, 100% devendo = 0 pts
-  const pontosDivida = (1 - ratioDivida) * 15;
-
-  const score = pontosTaxa + pontosPontualidade + pontosAtraso + pontosDivida;
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
-
-export function getScoreColor(score: number): string {
-  if (score >= 80) return 'text-success-600';
-  if (score >= 60) return 'text-warning-500';
-  return 'text-danger-500';
-}
-
-export function getScoreBg(score: number): string {
-  if (score >= 80) return 'bg-success-100 text-success-700';
-  if (score >= 60) return 'bg-warning-100 text-warning-700';
-  return 'bg-danger-100 text-danger-700';
-}
-
 export function gerarLinkWhatsApp(nome: string, telefone: string, valor: number, vencimento: string, tipo: 'pendente' | 'atrasado' = 'pendente', descricao?: string, remetente?: string): string {
   let mensagem: string;
   const desc = descricao ? ` (${descricao})` : '';
@@ -175,19 +106,19 @@ Para continuar aproveitando nossos serviços sem interrupções, regularize suas
 Qualquer dúvida, estamos à disposição!
 
 Atenciosamente,
-${remetente || 'VenceJa'}`;
+${remetente || 'VenceJá'}`;
   } else {
     const textoDias = textoPrazo(diasAteVencimento(vencimento));
     mensagem = `Olá ${nome}! Tudo bem?
 
 Temos uma cobrança${desc} no valor de ${formatCurrency(valor)} que vence ${textoDias} (${formatDate(vencimento)}).
 
-Que tal já quitar para ficar tranquil${descricao ? 'o com essa pendência' : 'o'}?
+Que tal já quitar e deixar isso resolvido?
 
 Estamos aqui caso precise de algo!
 
 Atenciosamente,
-${remetente || 'VenceJa'}`;
+${remetente || 'VenceJá'}`;
   }
   
   return `https://wa.me/${normalizarTelefoneBR(telefone)}?text=${encodeURIComponent(mensagem)}`;
@@ -226,7 +157,7 @@ export function gerarLinkWhatsAppCobranca(nome: string, telefone: string, cobran
     mensagem += `Total geral: ${formatCurrency(total)}\n\n`;
   }
   
-  mensagem += `Regularize suas pendências para continuar aproveitando nossos serviços sem interrupções.\n\nQualquer dúvida, estamos à disposição.\n\nAtenciosamente,\n${remetente || 'VenceJa'}`;
+  mensagem += `Regularize suas pendências para continuar aproveitando nossos serviços sem interrupções.\n\nQualquer dúvida, estamos à disposição.\n\nAtenciosamente,\n${remetente || 'VenceJá'}`;
   
   return `https://wa.me/${normalizarTelefoneBR(telefone)}?text=${encodeURIComponent(mensagem)}`;
 }
@@ -258,7 +189,7 @@ export function gerarLinkWhatsAppVarios(nome: string, telefone: string, cobranca
     mensagem += `\nTotal pendente: ${formatCurrency(totalPendente)}\n\n`;
   }
   
-  mensagem += `Regularize suas pendências para continuar aproveitando nossos serviços sem interrupções.\n\nQualquer dúvida, estamos à disposição.\n\nAtenciosamente,\n${remetente || 'VenceJa'}`;
+  mensagem += `Regularize suas pendências para continuar aproveitando nossos serviços sem interrupções.\n\nQualquer dúvida, estamos à disposição.\n\nAtenciosamente,\n${remetente || 'VenceJá'}`;
   
   return `https://wa.me/${normalizarTelefoneBR(telefone)}?text=${encodeURIComponent(mensagem)}`;
 }
@@ -272,19 +203,6 @@ export function slugify(text: string): string {
     .replace(/\s+/g, '-')
     .replace(/--+/g, '-')
     .trim();
-}
-
-export function gerarCSV(data: Record<string, unknown>[], headers: Record<string, string>): string {
-  const headerRow = Object.values(headers).join(',');
-  const rows = data.map(item => 
-    Object.keys(headers).map(key => {
-      const value = item[key];
-      if (value === null || value === undefined) return '';
-      if (typeof value === 'string' && value.includes(',')) return `"${value}"`;
-      return value;
-    }).join(',')
-  );
-  return [headerRow, ...rows].join('\n');
 }
 
 export function getChargeStatusColors(status: string, isOverdue: boolean): {

@@ -1,46 +1,71 @@
 'use client';
 
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { cn } from '@/lib/utils';
+import { Slot } from 'radix-ui';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+const buttonVariants = cva(
+  [
+    'relative inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl font-medium',
+    'transition-[transform,background-color,box-shadow,color,border-color,filter] duration-300 ease-spring',
+    'hover:scale-[1.05] active:scale-[0.95] disabled:pointer-events-none disabled:opacity-50',
+    'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/25',
+    '[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:transition-transform [&_svg]:duration-300 [&_svg]:ease-spring hover:[&_svg]:scale-125',
+  ],
+  {
+    variants: {
+      variant: {
+        primary: 'glass-brand text-white hover:brightness-[1.06]',
+        secondary: 'border border-line bg-surface text-ink shadow-xs hover:border-line-strong hover:bg-surface-2',
+        outline: 'border border-line-strong bg-transparent text-ink hover:bg-surface-2',
+        ghost: 'text-ink-2 hover:bg-ink/[0.05] hover:text-ink',
+        glass: 'glass text-ink hover:brightness-[1.03]',
+        danger: 'bg-neg text-white shadow-xs hover:brightness-110 dark:text-[#2a0a08]',
+        'danger-soft': 'bg-neg-soft text-neg hover:brightness-[0.97]',
+        whatsapp: 'glass-brand text-white hover:brightness-[1.06]',
+        link: 'h-auto rounded-md px-0 text-brand-ink underline-offset-4 hover:underline',
+      },
+      size: {
+        sm: 'h-9 px-3 text-sm',
+        md: 'h-11 px-4 text-sm',
+        lg: 'h-12 px-6 text-base [&_svg]:size-[18px]',
+        xl: 'h-14 px-7 text-base [&_svg]:size-5',
+        icon: 'size-10',
+        'icon-sm': 'size-8 rounded-lg',
+      },
+    },
+    defaultVariants: { variant: 'primary', size: 'md' },
+  }
+);
+
+interface ButtonProps
+  extends ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
   isLoading?: boolean;
+  asChild?: boolean;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props }, ref) => {
-    const variants = {
-      primary: 'bg-accent text-black hover:bg-accent/90 hover:shadow-glow active:scale-[0.98]',
-      secondary: 'bg-slate-800 text-white hover:bg-slate-700',
-      outline: 'border border-slate-700 text-white hover:bg-slate-800 hover:border-accent/50',
-      ghost: 'text-slate-400 hover:bg-slate-800 hover:text-white',
-      danger: 'bg-danger text-white hover:bg-danger/90',
-    };
-
-    const sizes = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2 text-sm',
-      lg: 'px-6 py-3 text-base',
-    };
+  ({ className, variant, size, isLoading, asChild, children, disabled, ...props }, ref) => {
+    if (asChild) {
+      return (
+        <Slot.Root ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props}>
+          {children}
+        </Slot.Root>
+      );
+    }
 
     return (
       <button
         ref={ref}
-        className={cn(
-          'inline-flex items-center justify-center font-light rounded-xl transition-all duration-200',
-          'focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 focus:ring-offset-black',
-          'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
-          variants[variant],
-          sizes[size],
-          className
-        )}
+        className={cn(buttonVariants({ variant, size }), className)}
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         {...props}
       >
-        {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+        {isLoading && <Loader2 className="animate-spin" aria-hidden />}
         {children}
       </button>
     );
@@ -49,4 +74,4 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button';
 
-export { Button };
+export { Button, buttonVariants };
