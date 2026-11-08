@@ -1,6 +1,8 @@
-backup-*.tar.gz
-docs/
-scripts/
-supabase/
-.next-completo/
-.next-prod/
+# Só pastas da raiz: sem a barra inicial, "supabase/" também ignoraria src/lib/supabase/.
+/backup-*.tar.gz
+/docs/
+/scripts/
+/supabase/
+/.next-completo/
+/.next-prod/
+/.next-audit/
