@@ -24,31 +24,39 @@ const display = Bricolage_Grotesque({
   display: 'swap',
 });
 
+const SITE = 'https://www.venceja.com.br';
+const title = 'VenceJá: controle de cobranças e cobrança pelo WhatsApp';
 const description =
-  'Controle quem te deve, acompanhe vencimentos e cobre pelo WhatsApp com a mensagem pronta. Para autônomos e pequenos negócios que querem sair do caderno e da planilha. Comece grátis.';
+  'Saiba quem te deve, acompanhe vencimentos e cobre pelo WhatsApp com a mensagem pronta. Para autônomos e pequenos negócios que querem largar o caderno e a planilha. Grátis para começar.';
+const shareTitle = 'VenceJá: saiba quem te deve. Cobre em dois toques.';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.venceja.com.br'),
+  metadataBase: new URL(SITE),
+  applicationName: 'VenceJá',
   title: {
-    default: 'VenceJá — Controle de cobranças para autônomos e pequenos negócios',
+    default: title,
     template: '%s | VenceJá',
   },
   description,
   keywords: [
     'VenceJá',
-    'VenceJa',
-    'controle de cobrança',
-    'controle de inadimplência',
+    'Vence Já',
+    'controle de cobranças',
     'cobrança pelo WhatsApp',
-    'gestão de clientes',
-    'cobrança recorrente',
-    'controle financeiro para autônomos',
-    'substituir planilha de cobrança',
+    'controle de inadimplência',
     'contas a receber',
+    'controle de clientes que devem',
+    'cobrança recorrente',
+    'mensalidade de alunos',
+    'controle financeiro para autônomos',
+    'planilha de cobrança',
+    'score de clientes',
   ],
-  authors: [{ name: 'VenceJá' }],
+  authors: [{ name: 'VenceJá', url: SITE }],
   creator: 'VenceJá',
   publisher: 'VenceJá',
+  category: 'finance',
+  formatDetection: { telephone: false, email: false, address: false },
   robots: {
     index: true,
     follow: true,
@@ -63,26 +71,35 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://www.venceja.com.br',
+    url: SITE,
     siteName: 'VenceJá',
-    title: 'VenceJá — Saiba quem te deve. Cobre em dois toques.',
+    title: shareTitle,
     description,
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'VenceJá — controle de cobranças' }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, type: 'image/png', alt: 'VenceJá: painel de cobranças e mensagem pronta para o WhatsApp' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'VenceJá — Saiba quem te deve. Cobre em dois toques.',
+    title: shareTitle,
     description,
-    images: ['/og-image.png'],
+    images: [{ url: '/og-image.png', alt: 'VenceJá: painel de cobranças e mensagem pronta para o WhatsApp' }],
   },
   alternates: {
-    canonical: 'https://www.venceja.com.br',
-    languages: { 'pt-BR': 'https://www.venceja.com.br' },
+    canonical: '/',
+    languages: { 'pt-BR': '/' },
   },
+  // Google picks the favicon from these links; it needs a square image in a multiple of 48px.
   icons: {
-    icon: [{ url: '/logo-mark.svg', type: 'image/svg+xml' }, { url: '/favicon.ico' }],
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      { url: '/logo-mark.svg', type: 'image/svg+xml' },
+      { url: '/icon-48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/icon-96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
   },
+  appleWebApp: { capable: true, title: 'VenceJá', statusBarStyle: 'default' },
+  ...(process.env.GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } } : {}),
 };
 
 export const viewport: Viewport = {

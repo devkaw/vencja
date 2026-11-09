@@ -16,7 +16,7 @@ export async function sendVerificationEmail(to: string, name: string, verifyUrl:
     const data = await resend.emails.send({
       from: `"VenceJá" <${process.env.RESEND_FROM_EMAIL}>`,
       to,
-      subject: 'Confirme seu email - VenceJá',
+      subject: 'Confirme seu e-mail para ativar a VenceJá',
       html,
     });
 
@@ -50,7 +50,7 @@ export async function sendResetPasswordEmail(to: string, name: string, resetUrl:
     const data = await resend.emails.send({
       from: `"VenceJá" <${process.env.RESEND_FROM_EMAIL}>`,
       to,
-      subject: 'Recuperar senha - VenceJá',
+      subject: 'Crie uma senha nova na VenceJá',
       html,
     });
 

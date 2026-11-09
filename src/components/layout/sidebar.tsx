@@ -23,10 +23,12 @@ import {
   ChevronRight,
   Search,
 } from 'lucide-react';
+import { ProTag } from '@/components/ui/pro-tag';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { PLANS } from '@/lib/subscription';
 import { Logo, LogoMark } from '@/components/brand/logo';
+import { BUBBLE } from '@/components/brand/logo-paths';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Sheet } from '@/components/ui/sheet';
@@ -210,7 +212,7 @@ export function Sidebar({ collapsed = false, onToggle, onSearch }: { collapsed?:
               >
                 <item.icon className="size-5 text-ink-3" />
                 <span className="flex-1">{item.name}</span>
-                {item.pro && !isPro && <span className="rounded-md bg-brand-soft px-1.5 py-0.5 text-2xs font-semibold text-brand-ink">PRO</span>}
+                {item.pro && !isPro && <ProTag />}
                 <ChevronRight className="size-4 text-ink-4" />
               </Link>
             ))}
@@ -254,7 +256,7 @@ function NavLink({ item, active, collapsed, locked, badge = 0 }: { item: NavItem
       )}
       <item.icon className={cn('size-[18px] shrink-0 transition-transform duration-300 ease-spring group-hover:-rotate-6 group-hover:scale-125', active ? 'text-brand-ink' : 'text-ink-3 group-hover:text-ink-2')} />
       {!collapsed && <span className="flex-1 truncate">{item.name}</span>}
-      {!collapsed && locked && <span className="rounded-md bg-brand-soft px-1.5 py-0.5 text-2xs font-semibold text-brand-ink">PRO</span>}
+      {!collapsed && locked && <ProTag />}
       {badge > 0 && (
         <span className={cn('rounded-md bg-neg-soft text-2xs font-semibold text-neg tnum', collapsed ? 'absolute right-1 top-0.5 px-1' : 'px-1.5 py-0.5')} aria-label={`${badge} em atraso`}>
           {badge}
@@ -294,15 +296,27 @@ function TabLink({ href, icon: Icon, label, active, badge = 0 }: { href: string;
 function PlanCard({ hasAccess, usage, onNavigate }: { hasAccess: boolean; usage?: { clients: number; charges: number } | null; onNavigate?: () => void }) {
   if (hasAccess) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-brand-500/20 bg-brand-soft/60 p-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-brand-600 text-white">
-          <Sparkles className="size-4" />
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-ink">Plano Pro</p>
-          <p className="text-xs text-ink-3">Clientes e cobranças ilimitados</p>
+      <Link
+        href="/dashboard/settings?secao=plan"
+        onClick={onNavigate}
+        aria-label="Plano Pro ativo. Ver detalhes do plano"
+        className="glass-brand group relative block overflow-hidden rounded-2xl p-3.5 text-white transition-transform duration-300 ease-spring hover:scale-[1.03] active:scale-[0.98]"
+      >
+        <svg viewBox="0 0 64 64" className="pointer-events-none absolute -bottom-6 -right-5 size-24 rotate-[-10deg] text-white/[0.09] transition-transform duration-500 ease-spring group-hover:rotate-[-4deg] group-hover:scale-110" aria-hidden>
+          <path d={BUBBLE} fill="currentColor" />
+        </svg>
+        <div className="relative flex items-center justify-between">
+          <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-white/70">Seu plano</span>
+          <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white ring-1 ring-inset ring-white/25">
+            <span className="size-1.5 rounded-full bg-[#7CF0B8] shadow-[0_0_6px_#7CF0B8]" aria-hidden />
+            Ativo
+          </span>
         </div>
-      </div>
+        <p className="relative mt-1.5 font-display text-xl font-bold leading-none tracking-[-0.02em]">
+          Pro<span className="text-white/60">.</span>
+        </p>
+        <p className="relative mt-1.5 text-xs leading-snug text-white/75">Clientes, cobranças e WhatsApp sem limite</p>
+      </Link>
     );
   }
 

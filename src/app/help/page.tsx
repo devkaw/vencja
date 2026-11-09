@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { LegalPage } from '@/components/legal/legal-page';
 import { ASSUNTO_SUPORTE_PRO, EMPRESA, PRAZO_ATENDIMENTO, PRAZO_SUPORTE_PRO, identificacaoEmpresa } from '@/lib/legal';
 
-export const metadata: Metadata = { title: 'Ajuda e contato', description: 'Fale com a VenceJá.', alternates: { canonical: '/help' } };
+export const metadata: Metadata = { title: 'Ajuda e contato', description: 'Como falar com a VenceJá, cancelar ou pedir reembolso da assinatura e resolver as dúvidas mais comuns.', alternates: { canonical: '/help' } };
 
 export default function HelpPage() {
   return (

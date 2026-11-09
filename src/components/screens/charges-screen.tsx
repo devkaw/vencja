@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, CalendarClock, Hash, Plus, Receipt, Sparkles, Wallet, X } from 'lucide-react';
+import { AlertTriangle, ArrowDownWideNarrow, CalendarClock, Hash, Plus, Receipt, Sparkles, Wallet, X } from 'lucide-react';
 import { Avatar } from '@/components/data/avatar';
 import { StackedBar } from '@/components/data/charts';
 import { EmptyState } from '@/components/data/empty-state';
 import { GlassPanel, Reveal, Stagger } from '@/components/motion/primitives';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FilterMenu } from '@/components/ui/filter-menu';
 import { Segmented } from '@/components/ui/segmented';
 import { WLink, useWorkspace, useWorkspaceNav } from '@/components/workspace/workspace-context';
 import { chargeState, diaLocal, saldoAberto, valorRecebido } from '@/lib/domain/charges';
@@ -20,7 +21,7 @@ import { KpiTile } from './kit/kpi-tile';
 import { LimitBanner } from './kit/limit-banner';
 import { PageHero } from './kit/page-hero';
 import { QuickActions } from './kit/quick-actions';
-import { SearchField, SortOrder, ViewToggle, selectClasses } from './kit/toolbar';
+import { SearchField, SortOrder, ViewToggle } from './kit/toolbar';
 
 type Filtro = '' | 'atrasada' | 'pendente' | 'pago';
 const PAGINA = 50;
@@ -139,15 +140,18 @@ export function ChargesScreen({ onWhatsApp }: { onWhatsApp?: () => void }) {
                     { value: 'pago', label: 'Pagas', count: contagem.pagas },
                   ]}
                 />
-                <label className="sr-only" htmlFor="ordem-cobrancas">
-                  Ordenar por
-                </label>
-                <select id="ordem-cobrancas" value={ordem} onChange={(e) => setOrdem(e.target.value as typeof ordem)} className={selectClasses}>
-                  <option value="prioridade">Prioridade</option>
-                  <option value="data_vencimento">Vencimento</option>
-                  <option value="valor">Valor</option>
-                  <option value="cliente">Cliente</option>
-                </select>
+                <FilterMenu<typeof ordem>
+                  label="Ordenar por"
+                  icon={<ArrowDownWideNarrow />}
+                  value={ordem}
+                  onChange={setOrdem}
+                  options={[
+                    { value: 'prioridade', label: 'Prioridade', hint: 'Em aberto primeiro, por vencimento' },
+                    { value: 'data_vencimento', label: 'Vencimento' },
+                    { value: 'valor', label: 'Valor' },
+                    { value: 'cliente', label: 'Cliente' },
+                  ]}
+                />
                 <SortOrder order={sentido} onToggle={() => setSentido((s) => (s === 'asc' ? 'desc' : 'asc'))} />
                 <ViewToggle value={vista} onChange={setVista} />
               </div>

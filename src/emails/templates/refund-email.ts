@@ -1,106 +1,46 @@
-import { escapeHtml } from '@/lib/utils';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+import { APP_URL, button, callout, emailLayout, esc, firstName, p, receipt, strong } from '../layout';
+import { escapeHtml, formatCurrency } from '@/lib/utils';
 
-export const refundEmailTemplate = (name: string, price: number, reason?: string) => `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 40px 0;">
-    <tr>
-      <td align="center">
-        <table width="560" cellpadding="0" cellspacing="0" style="background-color: #0a0a0a; border-radius: 16px; border: 1px solid #1f1f1f; padding: 40px;">
-          <!-- Header -->
-          <tr>
-            <td style="text-align: center; padding-bottom: 32px;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="text-align: center;">
-                    <img src="${APP_URL}/logo.png" alt="VenceJa" width="40" height="40" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px; display: inline-block; vertical-align: middle;" />
-                    <span style="color: #ffffff; font-size: 24px; font-weight: bold; margin-left: 12px; vertical-align: middle;">VenceJa</span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Title -->
-          <tr>
-            <td style="text-align: center; padding-bottom: 24px;">
-              <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0 0 8px 0;">Reembolso Processado</h1>
-              <p style="color: #ef4444; font-size: 16px; font-weight: 500; margin: 0;">Valor estornado com sucesso</p>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding-bottom: 24px;">
-              <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0 0 12px 0;">
-                Olá, <strong style="color: #ffffff;">${escapeHtml(name || 'usuário')}</strong>!
-              </p>
-              <p style="color: #a3a3a3; font-size: 15px; line-height: 24px; margin: 0;">
-                O reembolso de <strong style="color: #ef4444;">R$ ${price.toFixed(2).replace('.', ',')}</strong> foi processado e o valor será creditado na sua conta em até 5 dias úteis (dependendo do banco).
-              </p>
-              ${reason ? `<p style="color: #a3a3a3; font-size: 14px; margin: 12px 0 0 0;">Motivo: ${reason}</p>` : ''}
-            </td>
-          </tr>
-          
-          <!-- Info Box -->
-          <tr>
-            <td style="padding-bottom: 24px;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3); padding: 16px;">
-                <tr>
-                  <td style="text-align: center;">
-                    <p style="color: #3b82f6; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">💡 Precisa de ajuda?</p>
-                    <p style="color: #a3a3a3; font-size: 14px; margin: 0;">
-                      Se tiver qualquer dúvida sobre o estorno, entre em contato pelo WhatsApp ou email.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="border-top: 1px solid #262626; padding-top: 24px; text-align: center;">
-              <p style="color: #737373; font-size: 14px; margin: 4px 0;">Obrigado por usar o VenceJa!</p>
-              <p style="color: #737373; font-size: 14px; margin: 4px 0;">© ${new Date().getFullYear()} VenceJa - Gestão de Cobranças Inteligente</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-`;
+export const refundEmailTemplate = (name: string, price: number, reason?: string) =>
+  emailLayout({
+    preheader: `Reembolso de ${formatCurrency(price)} processado. O valor volta em até 5 dias úteis.`,
+    eyebrow: 'Reembolso',
+    tone: 'info',
+    title: 'Seu reembolso foi processado.',
+    body: `
+      ${p(`Oi, ${strong(firstName(name))}. O estorno da sua assinatura já foi feito.`)}
+      ${receipt({
+        label: 'Valor estornado',
+        value: formatCurrency(price),
+        note: 'Cai na sua conta ou fatura em até 5 dias úteis, conforme o banco.',
+        tone: 'info',
+        rows: reason ? [['Motivo', esc(reason)]] : undefined,
+      })}
+      ${p('Sua conta continua ativa no plano grátis, com seus clientes e cobranças guardados. Se quiser voltar ao Pro, é só assinar de novo.', { muted: true, size: 14 })}
+      ${button(`${APP_URL}/dashboard`, 'Abrir minha conta', 'secondary')}
+      ${callout('neutral', 'Ficou alguma dúvida?', 'Responda pelo e-mail de suporte abaixo que a gente explica.')}
+    `,
+    footnote: 'Obrigado por ter usado o Pro. Se algo não funcionou como esperava, conte pra gente: isso ajuda muito.',
+  });
 
-export const refundRequestEmailToAdminTemplate = (
-  name: string,
-  email: string,
-  price: number,
-  reason: string,
-  subscriptionId: string
-) => `
+/** Internal notice to the team. Plain on purpose. */
+export const refundRequestEmailToAdminTemplate = (name: string, email: string, price: number, reason: string, subscriptionId: string) => `
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 20px; font-family: Arial, sans-serif;">
-  <h2>Nova Solicitação de Reembolso</h2>
-  <p><strong>Cliente:</strong> ${escapeHtml(name)}</p>
-  <p><strong>Email:</strong> ${email}</p>
-  <p><strong>Valor:</strong> R$ ${price.toFixed(2).replace('.', ',')}</p>
-  <p><strong>ID Assinatura:</strong> ${subscriptionId}</p>
-  <p><strong>Motivo:</strong> ${reason}</p>
-  <hr>
-  <p>Acesse o painel Cakto para processar o reembolso (prazo de 7 dias).</p>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:24px;background-color:#F3F5F1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0E1A14;">
+  <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #E2E8E3;border-radius:16px;padding:24px;">
+    <p style="margin:0;color:#3E5BD8;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Interno</p>
+    <h2 style="margin:8px 0 16px;font-size:20px;">Nova solicitação de reembolso</h2>
+    <table cellpadding="0" cellspacing="0" style="width:100%;font-size:14px;line-height:1.6;">
+      <tr><td style="color:#627168;width:140px;">Cliente</td><td>${escapeHtml(name)}</td></tr>
+      <tr><td style="color:#627168;">E-mail</td><td>${escapeHtml(email)}</td></tr>
+      <tr><td style="color:#627168;">Valor</td><td>${formatCurrency(price)}</td></tr>
+      <tr><td style="color:#627168;">ID da assinatura</td><td>${escapeHtml(subscriptionId)}</td></tr>
+      <tr><td style="color:#627168;vertical-align:top;">Motivo</td><td>${escapeHtml(reason)}</td></tr>
+    </table>
+    <p style="margin:20px 0 0;padding-top:16px;border-top:1px solid #E2E8E3;font-size:14px;">Processe o reembolso no painel da Cakto (prazo de 7 dias).</p>
+  </div>
 </body>
 </html>
 `;

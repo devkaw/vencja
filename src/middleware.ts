@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
     '/robots.txt',
   ];
   
-  const isPublicFile = pathname === '/sitemap.xml' || pathname === '/robots.txt';
+  const isPublicFile = pathname === '/sitemap.xml' || pathname === '/robots.txt' || pathname === '/manifest.webmanifest';
   
   if (pathname.startsWith('/api/')) {
     return NextResponse.next();
@@ -80,6 +80,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|monitoring|_next/static|_next/image|favicon.ico|apple-touch-icon.*\\.png|.*\\.(?:svg|xml|txt|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|monitoring|_next/static|_next/image|favicon.ico|apple-touch-icon.*\\.png|.*\\.(?:svg|xml|txt|png|jpg|jpeg|gif|webp|ico|webmanifest)$).*)',
   ],
 };

@@ -48,7 +48,7 @@ export async function sendPaymentConfirmedEmail(
   price: number
 ) {
   const html = paymentConfirmedEmailTemplate(name, planType, price);
-  return sendEmail(to, 'Pagamento confirmado! Seu Plano Pro está ativo - VenceJá', html);
+  return sendEmail(to, 'Pagamento confirmado: seu Plano Pro está ativo', html);
 }
 
 export async function sendPaymentRejectedEmail(
@@ -57,12 +57,12 @@ export async function sendPaymentRejectedEmail(
   reason?: string
 ) {
   const html = paymentRejectedEmailTemplate(name, reason);
-  return sendEmail(to, 'Pagamento não processado - VenceJá', html);
+  return sendEmail(to, 'Seu pagamento não foi aprovado', html);
 }
 
 export async function sendSubscriptionCanceledEmail(to: string, name: string, endDate?: string) {
   const html = subscriptionCanceledEmailTemplate(name, endDate);
-  return sendEmail(to, 'Assinatura cancelada - VenceJá', html);
+  return sendEmail(to, 'Sua assinatura do Pro foi cancelada', html);
 }
 
 export async function sendCancellationRequestReceivedEmail(
@@ -72,7 +72,7 @@ export async function sendCancellationRequestReceivedEmail(
   endDate: string
 ) {
   const html = cancellationRequestReceivedEmailTemplate(name, planType, endDate);
-  return sendEmail(to, 'Solicitação de cancelamento recebida - VenceJá', html);
+  return sendEmail(to, 'Recebemos seu pedido de cancelamento', html);
 }
 
 export async function sendRefundRequestReceivedEmail(
@@ -83,7 +83,7 @@ export async function sendRefundRequestReceivedEmail(
   daysRemaining: number
 ) {
   const html = refundRequestReceivedEmailTemplate(name, planType, price, daysRemaining);
-  return sendEmail(to, 'Solicitação de reembolso recebida - VenceJá', html);
+  return sendEmail(to, 'Recebemos seu pedido de reembolso', html);
 }
 
 export async function sendOrderReceivedEmail(
@@ -94,7 +94,7 @@ export async function sendOrderReceivedEmail(
   orderNumber: string
 ) {
   const html = orderReceivedEmailTemplate(name, planType, price, orderNumber);
-  return sendEmail(to, 'Pedido recebido! Aguardando pagamento - VenceJá', html);
+  return sendEmail(to, 'Pedido recebido: falta só o pagamento', html);
 }
 
 export async function sendRenewalReminderEmail(
@@ -105,7 +105,7 @@ export async function sendRenewalReminderEmail(
   nextBillingDate: string
 ) {
   const html = renewalReminderEmailTemplate(name, planType, price, nextBillingDate);
-  return sendEmail(to, 'Sua assinatura será renovada amanhã - VenceJá', html);
+  return sendEmail(to, 'Seu Plano Pro renova amanhã', html);
 }
 
 export async function sendRenewalConfirmedEmail(
@@ -116,7 +116,7 @@ export async function sendRenewalConfirmedEmail(
   nextBillingDate: string
 ) {
   const html = renewalConfirmedEmailTemplate(name, planType, price, nextBillingDate);
-  return sendEmail(to, 'Assinatura renovada! - VenceJá', html);
+  return sendEmail(to, 'Tudo certo: seu Plano Pro foi renovado', html);
 }
 
 export async function sendRefundEmail(
@@ -126,7 +126,7 @@ export async function sendRefundEmail(
   reason?: string
 ) {
   const html = refundEmailTemplate(name, price, reason);
-  return sendEmail(to, 'Reembolso processado - VenceJá', html);
+  return sendEmail(to, 'Seu reembolso foi processado', html);
 }
 export async function sendDailyDigestEmail(to: string, digest: DailyDigest, linkDescadastro: string | null) {
   const total = digest.venceHoje.length + digest.venceuOntem.length;

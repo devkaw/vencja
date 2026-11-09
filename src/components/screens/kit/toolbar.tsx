@@ -15,7 +15,7 @@ export function SearchField({ value, onChange, placeholder }: { value: string; o
 
 export function SortOrder({ order, onToggle }: { order: 'asc' | 'desc'; onToggle: () => void }) {
   return (
-    <button onClick={onToggle} className="flex size-11 items-center justify-center rounded-xl border border-line text-ink-3 transition-colors hover:text-ink" aria-label={order === 'asc' ? 'Ordem crescente (inverter)' : 'Ordem decrescente (inverter)'}>
+    <button onClick={onToggle} className="flex size-11 items-center justify-center rounded-xl bg-ink/[0.05] text-ink-3 transition-[color,transform] duration-300 ease-spring hover:scale-[1.06] hover:text-ink active:scale-95" aria-label={order === 'asc' ? 'Ordem crescente (inverter)' : 'Ordem decrescente (inverter)'}>
       <ArrowUpDown className={cn('size-4 transition-transform', order === 'desc' && 'rotate-180')} />
     </button>
   );
@@ -39,4 +39,3 @@ export function ViewToggle({ value, onChange }: { value: 'list' | 'grid'; onChan
   );
 }
 
-export const selectClasses = 'h-11 min-w-0 cursor-pointer rounded-xl border border-line bg-surface px-3 text-sm text-ink-2 focus:border-brand-500 focus:outline-none';

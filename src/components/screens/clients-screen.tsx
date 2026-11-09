@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, ChevronRight, Gauge, Plus, Sparkles, Users, Wallet, X } from 'lucide-react';
+import { AlertTriangle, ArrowDownWideNarrow, ChevronRight, Gauge, Plus, Sparkles, Users, Wallet, X } from 'lucide-react';
 import { Avatar } from '@/components/data/avatar';
 import { ScoreRing } from '@/components/data/charts';
 import { EmptyState } from '@/components/data/empty-state';
 import { GlassPanel, Reveal, Stagger } from '@/components/motion/primitives';
 import { Button } from '@/components/ui/button';
+import { FilterMenu } from '@/components/ui/filter-menu';
 import { Segmented } from '@/components/ui/segmented';
 import { WLink, useWorkspace } from '@/components/workspace/workspace-context';
 import { FAIXA_ATENCAO, FAIXA_BOM, faixaScore, type ScoreFaixa } from '@/lib/domain/score';
@@ -17,7 +18,7 @@ import { cn, formatCurrency, formatPhone } from '@/lib/utils';
 import { KpiTile } from './kit/kpi-tile';
 import { LimitBanner } from './kit/limit-banner';
 import { PageHero } from './kit/page-hero';
-import { SearchField, SortOrder, ViewToggle, selectClasses } from './kit/toolbar';
+import { SearchField, SortOrder, ViewToggle } from './kit/toolbar';
 
 type FiltroDivida = '' | 'yes' | 'no';
 const PAGINA_CLIENTES = 60;
@@ -124,25 +125,32 @@ export function ClientsScreen() {
                   { value: 'no', label: 'Em dia' },
                 ]}
               />
-              <label className="sr-only" htmlFor="filtro-score">
-                Filtrar por score
-              </label>
-              <select id="filtro-score" value={filtroScore} onChange={(e) => setFiltroScore(e.target.value as '' | ScoreFaixa)} className={selectClasses}>
-                <option value="">Qualquer score</option>
-                <option value="bom">Bom pagador ({FAIXA_BOM}+)</option>
-                <option value="atencao">Atenção ({FAIXA_ATENCAO} a {FAIXA_BOM - 1})</option>
-                <option value="risco">Risco alto (até {FAIXA_ATENCAO - 1})</option>
-                <option value="sem_historico">Sem histórico</option>
-              </select>
-              <label className="sr-only" htmlFor="ordem-clientes">
-                Ordenar por
-              </label>
-              <select id="ordem-clientes" value={ordem} onChange={(e) => setOrdem(e.target.value as Ordem)} className={selectClasses}>
-                <option value="nome">Nome</option>
-                <option value="score">Score</option>
-                <option value="pago">Quem mais pagou</option>
-                <option value="atraso">Maior atraso</option>
-              </select>
+              <FilterMenu<'' | ScoreFaixa>
+                label="Filtrar por score"
+                icon={<Gauge />}
+                neutral=""
+                value={filtroScore}
+                onChange={setFiltroScore}
+                options={[
+                  { value: '', label: 'Qualquer score', short: 'Score' },
+                  { value: 'bom', label: 'Bom pagador', hint: `${FAIXA_BOM} a 100`, dot: 'bg-pos' },
+                  { value: 'atencao', label: 'Atenção', hint: `${FAIXA_ATENCAO} a ${FAIXA_BOM - 1}`, dot: 'bg-warn' },
+                  { value: 'risco', label: 'Risco alto', hint: `0 a ${FAIXA_ATENCAO - 1}`, dot: 'bg-neg' },
+                  { value: 'sem_historico', label: 'Sem histórico', hint: 'Nenhuma cobrança vencida ainda', dot: 'bg-ink-4' },
+                ]}
+              />
+              <FilterMenu<Ordem>
+                label="Ordenar por"
+                icon={<ArrowDownWideNarrow />}
+                value={ordem}
+                onChange={setOrdem}
+                options={[
+                  { value: 'nome', label: 'Nome' },
+                  { value: 'score', label: 'Score' },
+                  { value: 'pago', label: 'Quem mais pagou' },
+                  { value: 'atraso', label: 'Maior atraso' },
+                ]}
+              />
               <SortOrder order={sentido} onToggle={() => setSentido((s) => (s === 'asc' ? 'desc' : 'asc'))} />
               <ViewToggle value={vista} onChange={setVista} />
             </div>

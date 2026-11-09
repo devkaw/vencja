@@ -17,6 +17,7 @@ import { saldoAberto } from '@/lib/domain/charges';
 import { linhaDoTempo } from '@/lib/domain/clients';
 import { useAppStore } from '@/lib/store';
 import { chargeVisual, scoreTone } from '@/lib/ui/status';
+import { ProTag } from '@/components/ui/pro-tag';
 import { cn, formatCurrency, formatDate, formatPhone } from '@/lib/utils';
 import { PageHero } from './kit/page-hero';
 import { Panel } from './kit/panel';
@@ -184,7 +185,7 @@ export function ChargeDetailScreen({ id, onWhatsApp }: { id: string; onWhatsApp?
                       <WLink href="/dashboard/upgrade">
                         <WhatsAppIcon />
                         Cobrar no WhatsApp
-                        <span className="rounded-md bg-brand-soft px-1.5 py-0.5 text-2xs font-semibold text-brand-ink">PRO</span>
+                        <ProTag />
                       </WLink>
                     </Button>
                   )}
@@ -194,7 +195,7 @@ export function ChargeDetailScreen({ id, onWhatsApp }: { id: string; onWhatsApp?
           </motion.section>
 
           {texto && (
-            <Panel title="Mensagem pronta" hint="Você revisa no WhatsApp antes de enviar" icon={<WhatsAppIcon />} action={!isPro ? <Badge variant="primary">Pro</Badge> : undefined}>
+            <Panel title="Mensagem pronta" hint="Você revisa no WhatsApp antes de enviar" icon={<WhatsAppIcon />} action={!isPro ? <ProTag /> : undefined}>
               <div className="dot-grid rounded-2xl bg-surface-3 p-4">
                 <p className={cn('ml-auto max-w-md whitespace-pre-line rounded-2xl rounded-tr-sm bg-brand-soft px-3.5 py-2.5 text-[13.5px] leading-relaxed text-ink shadow-xs', !isPro && 'select-none')}>{texto}</p>
               </div>

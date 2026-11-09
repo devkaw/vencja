@@ -14,6 +14,7 @@ import { WLink, useWorkspace, useWorkspaceNav } from '@/components/workspace/wor
 import { chargeState, diaLocal, diasAteVencimento, saldoAberto } from '@/lib/domain/charges';
 import { linhaDoTempo } from '@/lib/domain/clients';
 import { useAppStore } from '@/lib/store';
+import { ProTag } from '@/components/ui/pro-tag';
 import { cn, formatCurrency, formatPhone, gerarLinkWhatsAppCobranca, normalizarTelefoneBR } from '@/lib/utils';
 import { ChargeList } from './kit/charge-list';
 import { KpiTile } from './kit/kpi-tile';
@@ -171,7 +172,7 @@ export function ClientDetailScreen({ id, onWhatsApp }: { id: string; onWhatsApp?
                   <WLink href="/dashboard/upgrade">
                     <WhatsAppIcon />
                     Cobrar no WhatsApp ({paraCobrar.length})
-                    <span className="rounded-md bg-brand-soft px-1.5 py-0.5 text-2xs font-semibold text-brand-ink">PRO</span>
+                    <ProTag />
                   </WLink>
                 </Button>
               )}
