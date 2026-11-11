@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Menu } from 'lucide-react';
 import { Logo } from '@/components/brand/logo';
@@ -12,15 +13,19 @@ import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { useIsLoggedIn } from './use-session';
 import { cn } from '@/lib/utils';
 
-const links = [
-  { href: '#demo', label: 'Demonstração' },
-  { href: '#como-funciona', label: 'Como funciona' },
-  { href: '#recursos', label: 'Recursos' },
-  { href: '#precos', label: 'Preços' },
-  { href: '#duvidas', label: 'Dúvidas' },
+// On the home page each item scrolls to its section; elsewhere it opens the section's own page.
+const sectionLinks = [
+  { anchor: '#demo', page: '/#demo', label: 'Demonstração' },
+  { anchor: '#como-funciona', page: '/como-funciona', label: 'Como funciona' },
+  { anchor: '#recursos', page: '/recursos', label: 'Recursos' },
+  { anchor: '#precos', page: '/precos', label: 'Preços' },
+  { anchor: '#duvidas', page: '/perguntas-frequentes', label: 'Dúvidas' },
 ];
 
 export function MarketingNav() {
+  const pathname = usePathname();
+  const onHome = pathname === '/';
+  const links = sectionLinks.map((l) => ({ href: onHome ? l.anchor : l.page, label: l.label }));
   const loggedIn = useIsLoggedIn();
   const [scrolled, setScrolled] = useState(false);
   const [pastHero, setPastHero] = useState(false);
@@ -39,7 +44,8 @@ export function MarketingNav() {
 
   // Highlights the menu item of the section currently on screen.
   useEffect(() => {
-    const sections = links.map((l) => document.querySelector(l.href)).filter(Boolean) as Element[];
+    if (!onHome) return;
+    const sections = sectionLinks.map((l) => document.querySelector(l.anchor)).filter(Boolean) as Element[];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -51,7 +57,9 @@ export function MarketingNav() {
     );
     sections.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [onHome, pathname]);
+
+  const current = onHome ? activeSection : (sectionLinks.find((l) => l.page === pathname)?.page ?? '');
 
   return (
     <>
@@ -80,10 +88,10 @@ export function MarketingNav() {
                   href={l.href}
                   className={cn(
                     'relative inline-block rounded-lg px-3 py-2 text-sm font-medium transition-[color,transform] duration-200 hover:scale-105',
-                    activeSection === l.href ? 'text-brand-ink' : 'text-ink-2 hover:text-ink'
+                    current === l.href ? 'text-brand-ink' : 'text-ink-2 hover:text-ink'
                   )}
                 >
-                  {activeSection === l.href && (
+                  {current === l.href && (
                     <motion.span layoutId="landing-nav-pill" className="absolute inset-0 -z-10 rounded-lg bg-brand-soft" transition={{ type: 'spring', stiffness: 400, damping: 32 }} />
                   )}
                   {l.label}

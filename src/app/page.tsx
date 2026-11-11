@@ -7,7 +7,6 @@ import { Benefits, HowItWorks, FeatureGrid, FinalCta, Footer } from '@/component
 import { Simulator } from '@/components/marketing/simulator';
 import { Pricing } from '@/components/marketing/pricing';
 import { Faq } from '@/components/marketing/faq';
-import { faqs } from '@/components/marketing/faq-data';
 import { AnimatedWords, Reveal, ScrollSection } from '@/components/motion/primitives';
 import { EMPRESA } from '@/lib/legal';
 import { PRICE_ANNUAL, PRICE_MONTHLY } from '@/lib/ui/pricing';
@@ -71,11 +70,6 @@ const structuredData = [
       { '@type': 'Offer', name: 'Pro mensal', price: PRICE_MONTHLY.toFixed(2), priceCurrency: 'BRL', url: `${SITE}/#precos` },
       { '@type': 'Offer', name: 'Pro anual', price: PRICE_ANNUAL.toFixed(2), priceCurrency: 'BRL', url: `${SITE}/#precos` },
     ],
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
   },
 ];
 

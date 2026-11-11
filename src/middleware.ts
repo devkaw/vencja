@@ -6,6 +6,10 @@ export async function middleware(request: NextRequest) {
   
   const publicRoutes = [
     '/',
+    '/precos',
+    '/recursos',
+    '/como-funciona',
+    '/perguntas-frequentes',
     '/login',
     '/register',
     '/forgot-password',

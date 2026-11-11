@@ -253,11 +253,11 @@ export function Footer() {
           <FooterCol
             title="Produto"
             links={[
-              { href: '#demo', label: 'Demonstração' },
-              { href: '#recursos', label: 'Funcionalidades' },
-              { href: '#simulador', label: 'Simulador' },
-              { href: '#precos', label: 'Planos' },
-              { href: '#duvidas', label: 'FAQ' },
+              { href: '/como-funciona', label: 'Como funciona' },
+              { href: '/recursos', label: 'Recursos' },
+              { href: '/precos', label: 'Preços e planos' },
+              { href: '/perguntas-frequentes', label: 'Perguntas frequentes' },
+              { href: '/#demo', label: 'Demonstração' },
             ]}
           />
           <FooterCol
